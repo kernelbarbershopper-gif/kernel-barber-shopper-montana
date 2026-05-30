@@ -1,0 +1,25 @@
+﻿[{"query": "CREATE TABLE IF NOT EXISTS public.machine_requests (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  shop_id UUID REFERENCES public.shops(id) NOT NULL,
+  status TEXT DEFAULT ''pending'' CHECK (status IN (''pending'',''filled'',''processing'',''shipped'',''delivered'')),
+  plan_name TEXT DEFAULT '''',
+  full_name TEXT DEFAULT '''',
+  phone TEXT DEFAULT '''',
+  address TEXT DEFAULT '''',
+  city TEXT DEFAULT '''',
+  state TEXT DEFAULT '''',
+  zip_code TEXT DEFAULT '''',
+  logo_url TEXT DEFAULT '''',
+  needs_logo_design BOOLEAN DEFAULT false,
+  notes TEXT DEFAULT '''',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.machine_requests ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS shop_mr_select ON public.machine_requests;
+DROP POLICY IF EXISTS shop_mr_insert ON public.machine_requests;
+DROP POLICY IF EXISTS shop_mr_update ON public.machine_requests;
+CREATE POLICY shop_mr_select ON public.machine_requests FOR SELECT USING (auth.uid() = shop_id);
+CREATE POLICY shop_mr_insert ON public.machine_requests FOR INSERT WITH CHECK (auth.uid() = shop_id);
+CREATE POLICY shop_mr_update ON public.machine_requests FOR UPDATE USING (auth.uid() = shop_id);
+"}]
