@@ -5,6 +5,10 @@
   "type": "module",
   "scripts": {
     "seed": "tsx scripts/seedData.ts",
+    "testAnon": "tsx scripts/testAnon.ts",
+    "testPlans": "tsx scripts/testPlans.ts",
+    "deleteShops": "tsx scripts/deleteShops.ts",
+    "fetchStats": "tsx scripts/fetchStats.ts",
     "create-admin": "tsx scripts/createAdminUser.ts",
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",

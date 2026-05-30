@@ -4,7 +4,11 @@ import { createClient } from '@supabase/supabase-js';
 import 'dotenv/config';
 
 const supabaseUrl = process.env.SUPABASE_URL;
+console.log('SUPABASE_URL:', supabaseUrl);
+
 const serviceKey = process.env.SUPABASE_SERVICE_KEY;
+console.log('SUPABASE_SERVICE_KEY length:', serviceKey?.length);
+
 
 if (!supabaseUrl || !serviceKey) {
   console.error('❌ SUPABASE_URL and SUPABASE_SERVICE_KEY must be set in .env');

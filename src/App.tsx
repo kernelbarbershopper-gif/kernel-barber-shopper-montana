@@ -49,6 +49,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
 import { chatWithAI } from './services/huggingfaceService';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { useLocale } from './contexts/LocaleContext';
+import LanguageSwitcher from './components/LanguageSwitcher';
 // Global handler for unhandled promise rejections
 if (typeof window !== 'undefined') {
   window.addEventListener('unhandledrejection', (event) => {
@@ -104,6 +106,7 @@ interface Message {
 
 function MainApp() {
   const { user, logout, isAdmin, userData } = useAuth();
+  const { t } = useLocale();
   
   // SIMPLE: Force admin true for this specific email - nothing else matters
   const isAdminFinal = user?.email === 'kernelbarbershopper@gmail.com' ? true : (isAdmin || false);
@@ -795,20 +798,20 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
   };
 
   const tabs = [
-    { id: 'overview', label: 'Visão Geral', icon: LayoutDashboard },
-    { id: 'shops', label: 'Lojas', icon: Building2 },
-    { id: 'financeiro', label: 'Financeiro', icon: DollarSign },
-    { id: 'saque', label: 'Saques', icon: Banknote },
-    { id: 'users', label: 'Usuários', icon: Users },
-    { id: 'plans', label: 'Planos', icon: Crown },
-    { id: 'settings', label: 'Configurações', icon: Settings }
+    { id: 'overview', label: t('Visão Geral'), icon: LayoutDashboard },
+    { id: 'shops', label: t('Lojas'), icon: Building2 },
+    { id: 'financeiro', label: t('Financeiro'), icon: DollarSign },
+    { id: 'saque', label: t('Saques'), icon: Banknote },
+    { id: 'users', label: t('Usuários'), icon: Users },
+    { id: 'plans', label: t('Planos'), icon: Crown },
+    { id: 'settings', label: t('Configurações'), icon: Settings }
   ];
 
   const statsData = [
-    { label: 'Lojas Ativas', val: stats.activeShops.toString(), icon: Building2, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-    { label: 'Receita Mensal (MRR)', val: formatCurrency(stats.mrr), icon: CreditCard, color: 'text-green-500', bg: 'bg-green-500/10' },
-    { label: 'Usuários Totais', val: stats.totalUsers.toString(), icon: Users, color: 'text-purple-500', bg: 'bg-purple-500/10' },
-    { label: 'Novas Lojas (30d)', val: stats.newShops30d.toString(), icon: TrendingUp, color: 'text-[#C9A84C]', bg: 'bg-[#C9A84C]/10' }
+    { label: t('Lojas Ativas'), val: stats.activeShops.toString(), icon: Building2, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+    { label: t('Receita Mensal (MRR)'), val: formatCurrency(stats.mrr), icon: CreditCard, color: 'text-green-500', bg: 'bg-green-500/10' },
+    { label: t('Usuários Totais'), val: stats.totalUsers.toString(), icon: Users, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+    { label: t('Novas Lojas (30d)'), val: stats.newShops30d.toString(), icon: TrendingUp, color: 'text-[#C9A84C]', bg: 'bg-[#C9A84C]/10' }
   ];
 
   return (
@@ -824,8 +827,9 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
         <div className="flex items-center gap-3 ml-auto">
           <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-[#141414] rounded-full border border-[#2A2A2A]">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-[10px] text-[#888] font-bold uppercase tracking-widest">Sistema Online</span>
+            <span className="text-[10px] text-[#888] font-bold uppercase tracking-widest">{t('Sistema Online')}</span>
           </div>
+          <LanguageSwitcher />
           <button onClick={logout} className="w-10 h-10 rounded-full bg-[#141414] border border-[#2A2A2A] flex items-center justify-center text-[#888] hover:text-red-500 hover:border-red-500/30 transition-all">
             <LogOut className="w-4 h-4" />
           </button>
@@ -838,8 +842,8 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
 
       <div className="p-8 max-w-[1400px] mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-display font-bold text-white mb-2">Dashboard SaaS</h1>
-          <p className="text-[#888] text-sm">Gerencie lojas, usuários, planos e monitore a saúde do sistema.</p>
+          <h1 className="text-3xl font-display font-bold text-white mb-2">{t('Dashboard SaaS')}</h1>
+          <p className="text-[#888] text-sm">{t('Gerencie lojas, usuários, planos e monitore a saúde do sistema.')}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -877,7 +881,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
             <motion.div key="overview" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-6">
-                  <h3 className="text-sm font-bold text-[#888] uppercase tracking-widest mb-4">Lojas Recentes</h3>
+                  <h3 className="text-sm font-bold text-[#888] uppercase tracking-widest mb-4">{t('Lojas Recentes')}</h3>
                   <div className="space-y-3">
                     {loading ? <Loader2 className="w-5 h-5 text-[#C9A84C] animate-spin" />
                     : shops.slice(0, 5).map((shop, i) => (
@@ -895,7 +899,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                   </div>
                 </div>
                 <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-6">
-                  <h3 className="text-sm font-bold text-[#888] uppercase tracking-widest mb-4">Planos Ativos</h3>
+                  <h3 className="text-sm font-bold text-[#888] uppercase tracking-widest mb-4">{t('Planos Ativos')}</h3>
                   <div className="space-y-3">
                     {plans.filter((p: any) => p.isActive).map((plan, i) => (
                       <div key={i} className="flex items-center justify-between p-3 bg-[#141414] rounded-xl">
@@ -918,13 +922,13 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                 <div className="p-4 border-b border-[#2A2A2A] flex items-center gap-4">
                   <div className="relative max-w-md flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#888]" />
-                    <input type="text" placeholder="Buscar lojas..." value={shopSearch} onChange={(e) => setShopSearch(e.target.value)}
+                    <input type="text" placeholder={t('Buscar lojas...')} value={shopSearch} onChange={(e) => setShopSearch(e.target.value)}
                       className="w-full bg-[#141414] border border-[#2A2A2A] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-[#555] focus:outline-none focus:border-[#C9A84C]" />
                   </div>
                   <button onClick={() => setShowCreateShop(true)}
                     className="flex items-center gap-2 px-4 py-2.5 bg-[#C9A84C] text-[#0A0A0A] text-sm font-bold rounded-xl hover:bg-[#D4B84C] transition-all">
                     <Plus className="w-4 h-4" />
-                    Nova Loja
+                    {t('Nova Loja')}
                   </button>
                 </div>
                 <div className="overflow-x-auto">
@@ -1003,17 +1007,17 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                 <h2 className="text-lg font-bold text-white mb-6">Nova Loja</h2>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold text-[#888] uppercase tracking-widest mb-1">Nome da Loja</label>
+                    <label className="block text-xs font-bold text-[#888] uppercase tracking-widest mb-1">{t('Nome da Loja')}</label>
                     <input value={newShopForm.name} onChange={(e) => setNewShopForm(p => ({ ...p, name: e.target.value }))}
                       placeholder="Ex: Barbearia Souza" className="w-full bg-[#141414] border border-[#2A2A2A] rounded-xl px-4 py-2.5 text-sm text-white placeholder-[#555] focus:outline-none focus:border-[#C9A84C]" />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-[#888] uppercase tracking-widest mb-1">Email do Dono</label>
+                    <label className="block text-xs font-bold text-[#888] uppercase tracking-widest mb-1">{t('Email do Dono')}</label>
                     <input value={newShopForm.ownerEmail} onChange={(e) => setNewShopForm(p => ({ ...p, ownerEmail: e.target.value }))}
                       placeholder="email@dono.com" className="w-full bg-[#141414] border border-[#2A2A2A] rounded-xl px-4 py-2.5 text-sm text-white placeholder-[#555] focus:outline-none focus:border-[#C9A84C]" />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-[#888] uppercase tracking-widest mb-1">Plano</label>
+                    <label className="block text-xs font-bold text-[#888] uppercase tracking-widest mb-1">{t('Plano')}</label>
                     <select value={newShopForm.plan} onChange={(e) => setNewShopForm(p => ({ ...p, plan: e.target.value }))}
                       className="w-full bg-[#141414] border border-[#2A2A2A] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#C9A84C]">
                       <option value="free">Free</option>
@@ -1023,18 +1027,18 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-[#888] uppercase tracking-widest mb-1">Duração (dias)</label>
+                    <label className="block text-xs font-bold text-[#888] uppercase tracking-widest mb-1">{t('Duração (dias)')}</label>
                     <input type="number" min={1} max={3650} value={newShopForm.durationDays} onChange={(e) => setNewShopForm(p => ({ ...p, durationDays: Number(e.target.value) }))}
                       className="w-full bg-[#141414] border border-[#2A2A2A] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#C9A84C]" />
                   </div>
                 </div>
                 <div className="flex gap-3 mt-6">
-                  <button onClick={() => setShowCreateShop(false)}
-                    className="flex-1 px-4 py-2.5 text-sm font-bold text-[#888] bg-[#141414] rounded-xl hover:bg-[#2A2A2A] transition-all">Cancelar</button>
+<button onClick={() => setShowCreateShop(false)}
+                     className="flex-1 px-4 py-2.5 text-sm font-bold text-[#888] bg-[#141414] rounded-xl hover:bg-[#2A2A2A] transition-all">{t('Cancelar')}</button>
                   <button onClick={handleCreateShop} disabled={creating || !newShopForm.name || !newShopForm.ownerEmail}
                     className="flex-1 px-4 py-2.5 text-sm font-bold bg-[#C9A84C] text-[#0A0A0A] rounded-xl hover:bg-[#D4B84C] transition-all disabled:opacity-50 flex items-center justify-center gap-2">
                     {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                    {creating ? 'Criando...' : 'Criar Loja'}
+                    {creating ? t('Criando...') : t('Criar Loja')}
                   </button>
                 </div>
               </div>
@@ -1111,7 +1115,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                 <div className="p-4 border-b border-[#2A2A2A]">
                   <div className="relative max-w-md">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#888]" />
-                    <input type="text" placeholder="Buscar usuários..." value={userSearch} onChange={(e) => setUserSearch(e.target.value)}
+                    <input type="text" placeholder={t('Buscar usuários...')} value={userSearch} onChange={(e) => setUserSearch(e.target.value)}
                       className="w-full bg-[#141414] border border-[#2A2A2A] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-[#555] focus:outline-none focus:border-[#C9A84C]" />
                   </div>
                 </div>
