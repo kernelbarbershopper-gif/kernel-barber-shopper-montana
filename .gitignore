@@ -9,7 +9,8 @@ coverage/
 
 .vercel
 .env*.local
-firebase-applet-config.json
+# firebase-applet-config.json
+!src/firebase-applet-config.json
 
 # Android / Capacitor
 android/.gradle/
