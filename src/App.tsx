@@ -606,6 +606,7 @@ Que bom ter você como dono da plataforma! Vou te guiar pelos principais módulo
 }
 
 function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
+  const { t } = useLocale();
   const [shops, setShops] = React.useState<any[]>([]);
   const [plans, setPlans] = React.useState<any[]>([]);
   const [users, setUsers] = React.useState<any[]>([]);
