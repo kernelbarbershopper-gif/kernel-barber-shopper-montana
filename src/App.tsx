@@ -1430,7 +1430,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
   );
 }
 
-function LoginScreen() {
+function LoginScreen() {\n  const { t } = useLocale();
   const { login, register } = useAuth();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
@@ -1582,12 +1582,12 @@ function LoginScreen() {
                 {error && <p className="text-red-500 text-xs">{error}</p>}
                 <button type="submit" disabled={loading}
                   className="w-full bg-gradient-to-r from-[#C9A84C] to-[#E8C96A] text-[#0A0A0A] py-4 rounded-2xl font-bold hover:brightness-110 active:scale-95 transition-all shadow-xl disabled:opacity-50 text-sm">
-                  {loading ? t('Aguarde...') : (isRegistering ? 'Cadastrar Grátis' : 'Entrar')}
+                  {loading ? t('Aguarde...') : (isRegistering ? t('Cadastrar Grátis') : t('Entrar'))}
                 </button>
               </form>
               <button onClick={() => { setIsRegistering(!isRegistering); setError(''); }}
                 className="mt-4 text-xs text-[#888] hover:text-[#C9A84C] transition-all w-full text-center">
-                {isRegistering ? 'Já tem conta? Entrar' : 'Não tem conta? Cadastre-se'}
+                {isRegistering ? t('Já tem conta? Entrar') : t('Não tem conta? Cadastre-se')}
               </button>
               {isRegistering && (
                 <div className="mt-4 bg-green-500/10 border border-green-500/20 rounded-xl p-3 text-center">
