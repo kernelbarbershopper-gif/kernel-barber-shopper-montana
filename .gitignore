@@ -9,8 +9,6 @@ coverage/
 
 .vercel
 .env*.local
-# firebase-applet-config.json
-!src/firebase-applet-config.json
 
 # Android / Capacitor
 android/.gradle/
@@ -20,3 +18,5 @@ android/capacitor-cordova-android-plugins/build/
 local.properties
 *.apk
 *.aab
+
+.vercel

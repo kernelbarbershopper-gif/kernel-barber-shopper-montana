@@ -106,7 +106,7 @@ function MainApp() {
   const { user, logout, isAdmin, userData } = useAuth();
   
   // SIMPLE: Force admin true for this specific email - nothing else matters
-  const isAdminFinal = user?.email === 'michaelmarianodasilva81@gmail.com' ? true : (isAdmin || false);
+  const isAdminFinal = user?.email === 'kernelbarbershopper@gmail.com' ? true : (isAdmin || false);
   
   const [activeView, setActiveView] = React.useState<View>(() => {
     if (typeof window !== 'undefined' && localStorage.getItem('redirectToPricing')) {
@@ -413,23 +413,31 @@ Que bom ter você como dono da plataforma! Vou te guiar pelos principais módulo
     <ErrorBoundary>
     <div className="min-h-screen bg-[#0A0A0A] text-white font-sans selection:bg-[#C9A84C] selection:text-black">
       {/* Mobile Bottom Navigation */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#141414] border-t border-[#2A2A2A] flex items-center justify-around z-50 px-2">
-        {navItems.slice(0, 5).map((item) => (
+<nav className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#141414] border-t border-[#2A2A2A] flex items-center justify-between px-2">
+          <div className="flex items-center">
+            {navItems.slice(0, 5).map((item) => (
+              <button
+                key={item.id}
+                onClick={() => item.locked ? setActiveView('pricing') : setActiveView(item.id)}
+                className={cn(
+                  "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all",
+                  activeView === item.id
+                    ? "text-[#C9A84C]"
+                    : item.locked ? "text-[#555]" : "text-[#888]"
+                )}
+              >
+                <item.icon className="w-5 h-5" />
+                <span className="text-[9px] font-bold">{item.locked ? `🔒 ${item.label}` : item.label}</span>
+              </button>
+            ))}
+          </div>
           <button
-            key={item.id}
-            onClick={() => item.locked ? setActiveView('pricing') : setActiveView(item.id)}
-            className={cn(
-              "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all",
-              activeView === item.id
-                ? "text-[#C9A84C]"
-                : item.locked ? "text-[#555]" : "text-[#888]"
-            )}
+            onClick={logout}
+            className="w-8 h-8 rounded-full bg-[#141414] border border-[#2A2A2A] flex items-center justify-center text-[#888] hover:text-red-500 hover:border-red-500/30 transition-all"
           >
-            <item.icon className="w-5 h-5" />
-            <span className="text-[9px] font-bold">{item.locked ? `🔒 ${item.label}` : item.label}</span>
+            <LogOut className="w-3 h-3" />
           </button>
-        ))}
-      </nav>
+        </nav>
 
       {/* Desktop Top Navigation */}
       <nav className="h-16 bg-[#141414] border-b border-[#2A2A2A] hidden lg:flex items-center px-6 gap-6 sticky top-0 z-50">
@@ -1142,7 +1150,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                               </td>
                               <td className="p-4 text-xs text-[#888]">Root</td>
                               <td className="p-4 text-right">
-                                {u.email !== 'michaelmarianodasilva81@gmail.com' && (
+                                {u.email !== 'kernelbarbershopper@gmail.com' && (
                                   <button onClick={() => handleDeleteUser(u.id)}
                                     className="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all">
                                     <Trash2 className="w-3 h-3 inline mr-1" />Deletar

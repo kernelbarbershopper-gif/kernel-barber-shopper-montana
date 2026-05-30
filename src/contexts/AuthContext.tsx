@@ -24,7 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (authUser) {
         await createUserDocument(authUser);
         
-        if (authUser.email === 'michaelmarianodasilva81@gmail.com') {
+        if (authUser.email === 'kernelbarbershopper@gmail.com') {
           setIsAdmin(true);
         }
       } else {
