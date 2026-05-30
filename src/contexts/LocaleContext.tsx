@@ -42,6 +42,20 @@ const translations: TranslationMap = {
   'Buscar lojas...': { en: 'Search shops...', 'pt-BR': 'Buscar lojas...', es: 'Buscar tiendas...' },
   'Buscar usuários...': { en: 'Search users...', 'pt-BR': 'Buscar usuários...', es: 'Buscar usuarios...' },
   'Criando...': { en: 'Creating...', 'pt-BR': 'Criando...', es: 'Creando...' },
+  // Additional UI strings
+  'IA Assistente': { en: 'AI Assistant', 'pt-BR': 'IA Assistente', es: 'Asistente IA' },
+  'Loja Online': { en: 'Online Store', 'pt-BR': 'Loja Online', es: 'Tienda Online' },
+  'Kit Profissional Grátis': { en: 'Free Professional Kit', 'pt-BR': 'Kit Profissional Grátis', es: 'Kit Profesional Gratis' },
+  'PROMOÇÃO RELÂMPAGO • PRIMEIRAS 12 VAGAS •': { en: 'FLASH PROMO • FIRST 12 SPOTS •', 'pt-BR': 'PROMOÇÃO RELÂMPAGO • PRIMEIRAS 12 VAGAS •', es: 'PROMOCIÓN FLASH • PRIMERAS 12 VAGAS •' },
+  'CRIAR CONTA': { en: 'CREATE ACCOUNT', 'pt-BR': 'CRIAR CONTA', es: 'CREAR CUENTA' },
+  'ACESSAR': { en: 'LOGIN', 'pt-BR': 'ACESSAR', es: 'INGRESAR' },
+  'Faça seu cadastro': { en: 'Register', 'pt-BR': 'Faça seu cadastro', es: 'Regístrate' },
+  'Bem-vinda de volta': { en: 'Welcome back', 'pt-BR': 'Bem-vinda de volta', es: 'Bienvenido nuevamente' },
+  'Aguarde...': { en: 'Please wait...', 'pt-BR': 'Aguarde...', es: 'Espera...' },
+  'Cadastrar Grátis': { en: 'Register for Free', 'pt-BR': 'Cadastrar Grátis', es: 'Registrarse Gratis' },
+  'Entrar': { en: 'Enter', 'pt-BR': 'Entrar', es: 'Entrar' },
+  'Já tem conta? Entrar': { en: 'Already have an account? Login', 'pt-BR': 'Já tem conta? Entrar', es: '¿Ya tienes cuenta? Iniciar sesión' },
+  'Não tem conta? Cadastre-se': { en: "Don't have an account? Sign up", 'pt-BR': 'Não tem conta? Cadastre-se', es: '¿No tienes cuenta? Regístrate' },
   // Add more keys as needed
 };
 

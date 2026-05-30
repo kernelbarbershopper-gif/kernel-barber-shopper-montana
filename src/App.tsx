@@ -440,6 +440,7 @@ Que bom ter você como dono da plataforma! Vou te guiar pelos principais módulo
           >
             <LogOut className="w-3 h-3" />
           </button>
+          <LanguageSwitcher />
         </nav>
 
       {/* Desktop Top Navigation */}
@@ -1534,9 +1535,7 @@ function LoginScreen() {
 
       {/* Notification Bar */}
       <div className="bg-gradient-to-r from-[#C9A84C] to-[#E8C96A] text-[#0A0A0A] text-center py-2.5 px-4 sticky top-0 z-40">
-        <p className="text-xs font-black uppercase tracking-widest">
-          ⏱ PROMOÇÃO RELÂMPAGO • PRIMEIRAS 12 VAGAS • {String(min).padStart(2, '0')}:{String(seg).padStart(2, '0')}
-        </p>
+<p className="text-xs font-black uppercase tracking-widest">{t('PROMOÇÃO RELÂMPAGO • PRIMEIRAS 12 VAGAS •')} {String(min).padStart(2, '0')}:{String(seg).padStart(2, '0')}</p>
       </div>
 
       {/* Hero + Login */}
@@ -1547,18 +1546,16 @@ function LoginScreen() {
             KERNEL<br />
             <span className="text-[#C9A84C]">BEAUTY SHOPPER</span>
           </h1>
-          <p className="text-[#888] text-lg max-w-lg mx-auto lg:mx-0 mb-8">
-            A gestão de luxo para sua barbearia, agora com inteligência artificial.
-          </p>
+<p className="text-[#888] text-lg max-w-lg mx-auto lg:mx-0 mb-8">{t('A gestão de luxo para sua barbearia, agora com inteligência artificial.')}</p>
           <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
             <div className="flex items-center gap-2 text-sm text-[#eee] bg-[#1A1A1A] px-4 py-2 rounded-xl border border-[#2A2A2A]">
-              <CheckCircle2 className="w-4 h-4 text-green-500" /> IA Assistente
+              <CheckCircle2 className="w-4 h-4 text-green-500" /> {t('IA Assistente')}
             </div>
             <div className="flex items-center gap-2 text-sm text-[#eee] bg-[#1A1A1A] px-4 py-2 rounded-xl border border-[#2A2A2A]">
-              <CheckCircle2 className="w-4 h-4 text-green-500" /> Loja Online
+              <CheckCircle2 className="w-4 h-4 text-green-500" /> {t('Loja Online')}
             </div>
             <div className="flex items-center gap-2 text-sm text-[#eee] bg-[#1A1A1A] px-4 py-2 rounded-xl border border-[#2A2A2A]">
-              <CheckCircle2 className="w-4 h-4 text-green-500" /> Kit Profissional Grátis
+              <CheckCircle2 className="w-4 h-4 text-green-500" /> {t('Kit Profissional Grátis')}
             </div>
           </div>
         </div>
@@ -1570,10 +1567,10 @@ function LoginScreen() {
             <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-[#C9A84C]/5 rounded-full blur-3xl" />
             <div className="relative">
               <p className="text-[10px] text-[#C9A84C] font-bold uppercase tracking-[3px] mb-2">
-                {isRegistering ? 'CRIAR CONTA' : 'ACESSAR'}
+                {isRegistering ? t('CRIAR CONTA') : t('ACESSAR')}
               </p>
               <h2 className="text-2xl font-bold text-white mb-8">
-                {isRegistering ? 'Faça seu cadastro' : 'Bem-vinda de volta'}
+                {isRegistering ? t('Faça seu cadastro') : t('Bem-vinda de volta')}
               </h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <input type="email" placeholder="Email" value={email}
@@ -1585,7 +1582,7 @@ function LoginScreen() {
                 {error && <p className="text-red-500 text-xs">{error}</p>}
                 <button type="submit" disabled={loading}
                   className="w-full bg-gradient-to-r from-[#C9A84C] to-[#E8C96A] text-[#0A0A0A] py-4 rounded-2xl font-bold hover:brightness-110 active:scale-95 transition-all shadow-xl disabled:opacity-50 text-sm">
-                  {loading ? 'Aguarde...' : (isRegistering ? 'Cadastrar Grátis' : 'Entrar')}
+                  {loading ? t('Aguarde...') : (isRegistering ? 'Cadastrar Grátis' : 'Entrar')}
                 </button>
               </form>
               <button onClick={() => { setIsRegistering(!isRegistering); setError(''); }}
@@ -1727,6 +1724,7 @@ function LoginScreen() {
 }
 
 function AppContent() {
+  const { t } = useLocale();
   const { user, loading } = useAuth();
   const [checkingAuth, setCheckingAuth] = React.useState(true);
 
@@ -3425,6 +3423,7 @@ function IAAssistantView({ messages, input, setInput, sendMessage, isTyping, cha
 }
 
 function PricingView() {
+  const { t } = useLocale();
   const [plans, setPlans] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const { user } = useAuth();
@@ -3573,12 +3572,8 @@ function PricingView() {
       className="max-w-6xl mx-auto space-y-8 py-8"
     >
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-display font-bold text-white mb-4">
-          Escolha o melhor para sua <span className="text-[#C9A84C]">salão</span>
-        </h1>
-        <p className="text-[#888] text-lg max-w-2xl mx-auto">
-          Gerencie sua barbearia com inteligência artificial e ferramentas Barbeiros. Comece grátis!
-        </p>
+<h1 className="text-4xl font-display font-bold text-white mb-4">{t('Escolha o melhor para seu salão')}</h1>
+<p className="text-[#888] text-lg max-w-2xl mx-auto">{t('Gerencie sua barbearia com inteligência artificial e ferramentas Barbeiros. Comece grátis!')}</p>
       </div>
 
       {loading ? (
