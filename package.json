@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "seed": "tsx scripts/seedData.ts",
     "create-admin": "tsx scripts/createAdminUser.ts",
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
