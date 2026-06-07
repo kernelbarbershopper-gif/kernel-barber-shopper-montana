@@ -1,5 +1,6 @@
-﻿import * as React from 'react';
+import * as React from 'react';
 import { motion } from 'motion/react';
+import { toast } from 'sonner';
 import { 
   Store, Package, Calendar, Scissors, 
   Instagram, Phone, ChevronLeft, Send, Loader2, CheckCircle2,
@@ -7,9 +8,6 @@ import {
 } from 'lucide-react';
 import { supabase } from '../services/supabaseClient';
 import { getBarberBySlug, fetchInventoryByShopId, getShopById, addAppointment } from '../services/dbService';
-
-// @ts-ignore
-const HF_TOKEN = (import.meta as any).env?.VITE_HF_TOKEN || process.env.VITE_HF_TOKEN || '';
 
 export default function LojaOnlineView() {
   const params = new URLSearchParams(window.location.search);
@@ -47,38 +45,20 @@ export default function LojaOnlineView() {
     setChatMsgs(prev => [...prev, { role: 'user', text: userText }]);
     setChatLoading(true);
     try {
-      const prompt = `Você é um assistente de salão amigável. Seu objetivo é ajudar o cliente a escolher um corte de cabelo e convencê-lo a agendar um horário. Seja simpático e persuasivo.
-
-profissional: ${barber?.name || 'Profissional'}
-Bio: ${barber?.bio || 'Especialista em cortes'}
-Instagram: ${barber?.instagram || 'N/A'}
-WhatsApp: ${barber?.whatsapp || 'N/A'}
-
-Serviço disponível: Corte de Cabelo (R$ 35,00 - 45 min)
-
-Responda em português brasileiro, seja convincente mas natural. Se o cliente mostrar interesse, incentive a agendar.`;
-
-      if (!HF_TOKEN) {
-        setChatMsgs(prev => [...prev, { role: 'assistant', text: '😅 Desculpe, o chat IA está temporariamente indisponível. Mas você pode agendar direto pelo botão "Agendar Horário" ou falar conosco pelo WhatsApp!' }]);
-        setChatLoading(false);
-        return;
-      }
-
-      const { InferenceClient } = await import('@huggingface/inference');
-      const client = new InferenceClient(HF_TOKEN);
-      const res = await client.chatCompletion({
-        model: 'meta-llama/Llama-3.1-8B-Instruct',
-        messages: [
-          { role: 'system', content: prompt },
-          ...chatMsgs.map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text })),
-          { role: 'user', content: userText }
-        ],
-        max_tokens: 300,
+      const res = await fetch('/api/chat-shop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userText,
+          history: chatMsgs,
+          barber: { name: barber?.name, bio: barber?.bio, instagram: barber?.instagram, whatsapp: barber?.whatsapp },
+        }),
       });
-      const reply = res.choices?.[0]?.message?.content || '😊 Obrigado! Quer agendar um horário?';
+      const data: any = await res.json();
+      const reply = data?.reply || '?? Obrigado! Quer agendar um hor�rio?';
       setChatMsgs(prev => [...prev, { role: 'assistant', text: reply }]);
     } catch {
-      setChatMsgs(prev => [...prev, { role: 'assistant', text: '😅 Poxa, tive um probleminha! Mas você pode agendar clicando em "Agendar Horário" ou chamar no WhatsApp!' }]);
+      setChatMsgs(prev => [...prev, { role: 'assistant', text: '?? Poxa, tive um probleminha! Mas voc� pode agendar clicando em "Agendar Hor�rio" ou chamar no WhatsApp!' }]);
     } finally {
       setChatLoading(false);
     }
@@ -94,7 +74,7 @@ Responda em português brasileiro, seja convincente mas natural. Se o cliente mo
       try {
         const barberData = await getBarberBySlug(barberSlug);
         if (!barberData) {
-          setError('profissional não encontrado.');
+          setError('profissional n�o encontrado.');
           setLoading(false);
           return;
         }
@@ -215,7 +195,7 @@ Responda em português brasileiro, seja convincente mas natural. Se o cliente mo
       setAppointmentPix({ id: appt?.id, name: form.name, phone: form.phone, date: form.date, time: form.time });
       setScheduled(true);
     } catch (err: any) {
-      alert('Erro ao agendar: ' + (err?.message || ''));
+      toast.error('Erro ao agendar: ' + (err?.message || ''));
     } finally {
       setScheduling(false);
     }
@@ -241,7 +221,7 @@ Responda em português brasileiro, seja convincente mas natural. Se o cliente mo
       if (!res.ok) { alert(data.message || 'Erro ao gerar PIX'); return; }
       setPixData(data);
     } catch (err: any) {
-      alert('Erro: ' + (err?.message || ''));
+      toast.error('Erro: ' + (err?.message || ''));
     } finally {
       setPayingAppointment(false);
     }
@@ -271,7 +251,7 @@ Responda em português brasileiro, seja convincente mas natural. Se o cliente mo
       }
       setPixData(data);
     } catch (err: any) {
-      alert('Erro ao comprar: ' + (err?.message || ''));
+      toast.error('Erro ao comprar: ' + (err?.message || ''));
     } finally {
       setBuying(false);
     }
@@ -290,8 +270,8 @@ Responda em português brasileiro, seja convincente mas natural. Se o cliente mo
       <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center p-8">
         <div className="text-center max-w-md">
           <Store className="w-16 h-16 text-[#C9A84C] mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-white mb-2">Loja não encontrada</h2>
-          <p className="text-[#888] text-sm mb-6">{error || 'profissional não encontrado'}</p>
+          <h2 className="text-xl font-bold text-white mb-2">Loja n�o encontrada</h2>
+          <p className="text-[#888] text-sm mb-6">{error || 'profissional n�o encontrado'}</p>
           <a href="/" className="inline-block px-6 py-3 bg-[#C9A84C] text-black rounded-xl font-bold hover:bg-[#d4b85a] transition-colors">
             Voltar
           </a>
@@ -350,7 +330,7 @@ Responda em português brasileiro, seja convincente mas natural. Se o cliente mo
           </div>
           <button onClick={() => { setShowSchedule(true); setForm({ name: '', phone: '', date: '', time: '' }); }}
             className="w-full md:w-auto bg-[#C9A84C] text-[#0A0A0A] px-6 py-3 rounded-xl font-bold text-sm hover:bg-[#E8C96A] transition-all shadow-lg shadow-[#C9A84C]/20 flex items-center gap-2">
-            <Calendar className="w-4 h-4" /> Agendar Horário
+            <Calendar className="w-4 h-4" /> Agendar Hor�rio
           </button>
         </motion.div>
 
@@ -382,13 +362,13 @@ Responda em português brasileiro, seja convincente mas natural. Se o cliente mo
         <div>
           <div className="flex items-center gap-2 mb-4">
             <Package className="w-5 h-5 text-[#C9A84C]" />
-            <h2 className="text-lg font-bold text-white">Produtos Disponíveis</h2>
+            <h2 className="text-lg font-bold text-white">Produtos Dispon�veis</h2>
           </div>
 
           {products.length === 0 ? (
             <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-8 text-center">
               <Package className="w-12 h-12 text-[#333] mx-auto mb-3" />
-              <p className="text-[#888] text-sm">Nenhum produto disponível no momento.</p>
+              <p className="text-[#888] text-sm">Nenhum produto dispon�vel no momento.</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -407,7 +387,7 @@ Responda em português brasileiro, seja convincente mas natural. Se o cliente mo
                     <p className="text-[10px] text-[#555] uppercase tracking-wider font-bold mb-2">{product.category}</p>
                   )}
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-[#C9A84C] font-bold text-lg">R$ {Number(product.price || 0).toFixed(2)}</span>
+                    <span className="text-[#C9A84C] font-bold text-lg">${Number(product.price || 0).toFixed(2)}</span>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                       (product.quantity || 0) <= 2 ? 'bg-red-500/10 text-red-500' : 
                       (product.quantity || 0) <= 5 ? 'bg-orange-500/10 text-orange-500' : 
@@ -430,7 +410,7 @@ Responda em português brasileiro, seja convincente mas natural. Se o cliente mo
         <div>
           <div className="flex items-center gap-2 mb-4">
             <Scissors className="w-5 h-5 text-[#C9A84C]" />
-            <h2 className="text-lg font-bold text-white">Serviços</h2>
+            <h2 className="text-lg font-bold text-white">Servi�os</h2>
           </div>
           <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-6">
             <div className="flex items-center justify-between">
@@ -438,7 +418,7 @@ Responda em português brasileiro, seja convincente mas natural. Se o cliente mo
                 <Scissors className="w-5 h-5 text-[#C9A84C]" />
                 <div>
                   <p className="font-bold text-sm text-white">Corte de Cabelo</p>
-                  <p className="text-[10px] text-[#888]">45 min • Serviço profissional</p>
+                  <p className="text-[10px] text-[#888]">45 min � Servi�o profissional</p>
                 </div>
               </div>
               <button onClick={() => { setShowSchedule(true); setForm({ name: '', phone: '', date: '', time: '' }); }}
@@ -462,7 +442,7 @@ Responda em português brasileiro, seja convincente mas natural. Se o cliente mo
                 <h2 className="text-xl font-bold text-white mb-2">Pedido Gerado!</h2>
                 <p className="text-[#888] text-sm mb-4">Pague o PIX abaixo para confirmar a compra.</p>
                 <p className="text-lg font-bold text-[#C9A84C] mb-6">
-                  R$ {Number(pixData.value || 0).toFixed(2)}
+                  ${Number(pixData.value || 0).toFixed(2)}
                 </p>
                 {pixData.pix?.encodedImage && (
                   <img src={pixData.pix.encodedImage} alt="PIX QR Code" 
@@ -470,11 +450,11 @@ Responda em português brasileiro, seja convincente mas natural. Se o cliente mo
                 )}
                 {pixData.pix?.payload && (
                   <div className="bg-[#141414] border border-[#2A2A2A] rounded-xl p-3 mb-6">
-                    <p className="text-[10px] text-[#888] uppercase font-bold mb-1">Código PIX</p>
+                    <p className="text-[10px] text-[#888] uppercase font-bold mb-1">C�digo PIX</p>
                     <p className="text-xs text-white break-all font-mono">{pixData.pix.payload}</p>
                     <button onClick={() => navigator.clipboard.writeText(pixData.pix.payload)}
                       className="mt-2 text-[#C9A84C] text-xs font-bold hover:underline">
-                      Copiar código
+                      Copiar c�digo
                     </button>
                   </div>
                 )}
@@ -487,7 +467,7 @@ Responda em português brasileiro, seja convincente mas natural. Se o cliente mo
               <>
                 <h2 className="text-xl font-bold text-[#C9A84C] mb-2">Comprar {buyProduct.name}</h2>
                 <p className="text-sm text-[#C9A84C] font-bold mb-6">
-                  R$ {Number(buyProduct.price || 0).toFixed(2)} / un
+                  ${Number(buyProduct.price || 0).toFixed(2)} / un
                 </p>
 
                 <div className="space-y-4">
@@ -513,7 +493,7 @@ Responda em português brasileiro, seja convincente mas natural. Se o cliente mo
                     <div className="flex justify-between text-sm">
                       <span className="text-[#888]">Subtotal</span>
                       <span className="text-white font-bold">
-                        R$ {((Number(buyProduct.price) || 0) * (parseInt(buyForm.qty) || 1)).toFixed(2)}
+                        ${((Number(buyProduct.price) || 0) * (parseInt(buyForm.qty) || 1)).toFixed(2)}
                       </span>
                     </div>
                   </div>
@@ -547,18 +527,18 @@ Responda em português brasileiro, seja convincente mas natural. Se o cliente mo
                   <>
                     <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-4" />
                     <h2 className="text-xl font-bold text-white mb-2">PIX Gerado!</h2>
-                    <p className="text-[#888] text-sm mb-4">Pague o PIX abaixo para garantir seu horário.</p>
-                    <p className="text-lg font-bold text-[#C9A84C] mb-6">R$ 35,00</p>
+                    <p className="text-[#888] text-sm mb-4">Pague o PIX abaixo para garantir seu hor�rio.</p>
+                    <p className="text-lg font-bold text-[#C9A84C] mb-6">$35.00</p>
                     {pixData.pix?.encodedImage && (
                       <img src={pixData.pix.encodedImage} alt="PIX QR Code"
                         className="w-56 h-56 mx-auto mb-4 rounded-2xl bg-white p-2" />
                     )}
                     {pixData.pix?.payload && (
                       <div className="bg-[#141414] border border-[#2A2A2A] rounded-xl p-3 mb-6">
-                        <p className="text-[10px] text-[#888] uppercase font-bold mb-1">Código PIX</p>
+                        <p className="text-[10px] text-[#888] uppercase font-bold mb-1">C�digo PIX</p>
                         <p className="text-xs text-white break-all font-mono">{pixData.pix.payload}</p>
                         <button onClick={() => navigator.clipboard.writeText(pixData.pix.payload)}
-                          className="mt-2 text-[#C9A84C] text-xs font-bold hover:underline">Copiar código</button>
+                          className="mt-2 text-[#C9A84C] text-xs font-bold hover:underline">Copiar c�digo</button>
                       </div>
                     )}
                   </>
@@ -567,12 +547,12 @@ Responda em português brasileiro, seja convincente mas natural. Se o cliente mo
                     <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
                     <h2 className="text-xl font-bold text-white mb-2">Agendamento Confirmado!</h2>
                     <p className="text-[#888] text-sm mb-2">
-                      {form.date} às {form.time} com {barber?.name}
+                      {form.date} �s {form.time} com {barber?.name}
                     </p>
-                    <p className="text-[#888] text-xs mb-6">Você pode pagar via PIX para garantir sua vaga.</p>
+                    <p className="text-[#888] text-xs mb-6">Voc� pode pagar via PIX para garantir sua vaga.</p>
                     <button onClick={handlePayAppointment} disabled={payingAppointment}
                       className="w-full mb-3 py-3 bg-green-500 text-white rounded-xl font-bold text-sm hover:bg-green-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
-                      {payingAppointment ? <Loader2 className="w-4 h-4 animate-spin" /> : '💳 Pagar com PIX (R$ 35,00)'}
+                      {payingAppointment ? <Loader2 className="w-4 h-4 animate-spin" /> : '?? Pagar com PIX ($35.00)'}
                     </button>
                   </>
                 )}
@@ -584,7 +564,7 @@ Responda em português brasileiro, seja convincente mas natural. Se o cliente mo
             ) : (
               <>
                 <h2 className="text-xl font-bold text-[#C9A84C] mb-2">Agendar com {barber?.name}</h2>
-                <p className="text-[#888] text-sm mb-6">Preencha seus dados e escolha o melhor horário.</p>
+                <p className="text-[#888] text-sm mb-6">Preencha seus dados e escolha o melhor hor�rio.</p>
 
                 <div className="space-y-4">
                   <div>
@@ -608,13 +588,13 @@ Responda em português brasileiro, seja convincente mas natural. Se o cliente mo
                   {form.date && (
                     <div>
                       <label className="text-[#888] text-xs font-bold uppercase tracking-wider mb-2 block">
-                        Horários Disponíveis {slotsLoading && <Loader2 className="w-3 h-3 animate-spin inline" />}
+                        Hor�rios Dispon�veis {slotsLoading && <Loader2 className="w-3 h-3 animate-spin inline" />}
                       </label>
                       {slotsLoading ? (
                         <div className="h-20 flex items-center justify-center text-[#555] text-xs">Carregando...</div>
                       ) : availableSlots.length === 0 ? (
                         <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-center">
-                          <p className="text-red-500 text-xs font-bold">Nenhum horário disponível nesta data.</p>
+                          <p className="text-red-500 text-xs font-bold">Nenhum hor�rio dispon�vel nesta data.</p>
                           <p className="text-[#888] text-[10px] mt-1">Tente outra data.</p>
                         </div>
                       ) : (
@@ -660,7 +640,7 @@ Responda em português brasileiro, seja convincente mas natural. Se o cliente mo
               <Scissors className="w-5 h-5 text-[#0A0A0A]" />
               <div>
                 <p className="text-sm font-bold text-[#0A0A0A]">Assistente</p>
-                <p className="text-[10px] text-[#0A0A0A]/70">Tire suas dúvidas!</p>
+                <p className="text-[10px] text-[#0A0A0A]/70">Tire suas d�vidas!</p>
               </div>
             </div>
             <button onClick={() => setChatOpen(false)} className="w-8 h-8 rounded-full bg-black/10 flex items-center justify-center hover:bg-black/20 transition-all">
@@ -671,7 +651,7 @@ Responda em português brasileiro, seja convincente mas natural. Se o cliente mo
             {chatMsgs.length === 0 && (
               <div className="text-center text-[#555] text-xs py-8">
                 <Scissors className="w-8 h-8 mx-auto mb-2 text-[#C9A84C]" />
-                <p className="font-bold text-sm text-white mb-1">👋 Quer um corte novo?</p>
+                <p className="font-bold text-sm text-white mb-1">?? Quer um corte novo?</p>
                 <p>Pergunte sobre estilos, valores ou agende agora!</p>
               </div>
             )}

@@ -3,37 +3,37 @@ import { createClient } from '@supabase/supabase-js';
 import 'dotenv/config';
 
 const supabaseUrl = process.env.SUPABASE_URL;
-console.log('SUPABASE_URL:', supabaseUrl);
-
 const serviceKey = process.env.SUPABASE_SERVICE_KEY;
-console.log('SUPABASE_SERVICE_KEY length:', serviceKey?.length);
-
+const email = process.env.ADMIN_EMAIL;
+const password = process.env.ADMIN_PASSWORD;
 
 if (!supabaseUrl || !serviceKey) {
-  console.error('❌ SUPABASE_URL e SUPABASE_SERVICE_KEY precisam estar definidas no .env');
+  console.error('❌ SUPABASE_URL and SUPABASE_SERVICE_KEY must be set in .env');
+  process.exit(1);
+}
+if (!email || !password) {
+  console.error('❌ ADMIN_EMAIL and ADMIN_PASSWORD must be set in .env');
+  console.error('   Generate a strong password (e.g. `openssl rand -base64 24`) and store it in a password manager.');
+  process.exit(1);
+}
+if (password.length < 12) {
+  console.error('❌ ADMIN_PASSWORD must be at least 12 characters');
   process.exit(1);
 }
 
 const supabase = createClient(supabaseUrl, serviceKey);
 
 async function main() {
-  const email = 'kernelbarbershopper@gmail.com';
-  const password = 'M@1dasilva';
-
   const { data, error } = await supabase.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
-    // opcional: metadata para identificar admin
-    // user_metadata: { role: 'admin' }
+    user_metadata: { role: 'admin' },
   });
-
   if (error) {
     console.error('❌ Erro ao criar usuário admin:', error);
     process.exit(1);
   }
-
   console.log('✅ Usuário admin criado com sucesso. ID:', data?.user?.id);
 }
-
 main();

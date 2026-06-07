@@ -1,9 +1,18 @@
 import { createClient, User } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ejdsuslapvzsseqotvhp.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqZHN1c2xhcHZ6c3NlcW90dmhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNTE1NDksImV4cCI6MjA5MjgyNzU0OX0.3UoKRtP2znHuEVe9wBmc0Wtkuzr1m0dbQzB3lHROmQg';
+// Read from Vite env only — no hardcoded fallbacks. Build fails loud if missing
+// during `npm run build` (Vite validates import.meta.env at compile time).
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+if (!supabaseUrl || !supabaseAnonKey) {
+  // eslint-disable-next-line no-console
+  console.error('[supabase] Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY. Check .env.example.');
+}
+
+export const supabase = createClient(supabaseUrl || 'https://invalid.supabase.co', supabaseAnonKey || 'invalid-anon-key', {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+});
 
 export function onAuthStateChange(callback: (user: User | null) => void) {
   const { data } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -12,5 +21,25 @@ export function onAuthStateChange(callback: (user: User | null) => void) {
   return () => data?.subscription?.unsubscribe();
 }
 
-export async function createUserDocument(_user: User) {
+/**
+ * Idempotent profile creation. Inserts a row in `public.profiles` keyed by user.id.
+ * Safe to call multiple times for the same user (uses upsert with onConflict).
+ */
+export async function createUserDocument(user: User) {
+  if (!user?.id) return;
+  const displayName = (user.user_metadata?.full_name as string) || (user.email?.split('@')[0] ?? 'user');
+  const { error } = await supabase.from('profiles').upsert(
+    {
+      id: user.id,
+      email: user.email,
+      display_name: displayName,
+      role: 'user',
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'id' }
+  );
+  if (error && error.code !== 'PGRST116') {
+    // eslint-disable-next-line no-console
+    console.error('[supabase] createUserDocument error:', error.message);
+  }
 }

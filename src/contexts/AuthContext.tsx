@@ -13,6 +13,17 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Admin emails are sourced from env (VITE_ADMIN_EMAILS) and treated as a
+// comma-separated allowlist. This avoids hardcoding in source and makes
+// rotation trivial. Example: VITE_ADMIN_EMAILS=you@x.com,other@y.com
+function getAdminAllowlist(): string[] {
+  const raw = (import.meta as any).env?.VITE_ADMIN_EMAILS || '';
+  return String(raw)
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -23,16 +34,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(authUser);
       if (authUser) {
         await createUserDocument(authUser);
-        
-        if (authUser.email === 'kernelbarbershopper@gmail.com') {
-          setIsAdmin(true);
-        }
+        const allow = getAdminAllowlist();
+        setIsAdmin(!!authUser.email && allow.includes(authUser.email.toLowerCase()));
       } else {
         setIsAdmin(false);
       }
       setLoading(false);
     });
-
     return unsubscribe;
   }, []);
 

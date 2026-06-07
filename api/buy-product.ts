@@ -1,84 +1,72 @@
-import { createClient } from '@supabase/supabase-js';
+import { findOrCreateCustomer, getPixQrCode, requireAsaasKey } from './_lib/asaas';
 
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://ejdsuslapvzsseqotvhp.supabase.co';
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || '';
-const ASAAS_API_KEY = process.env.ASAAS_API_KEY || '';
-
-const API_BASE = 'https://api.asaas.com/v3';
-
-async function findOrCreateCustomer(name: string, email: string, phone: string, cpfCnpj?: string): Promise<string> {
-  const customerCpf = cpfCnpj || '24971563792';
-  const cleanPhone = phone.replace(/\D/g, '');
-
-  // Search existing
-  const searchRes = await fetch(`${API_BASE}/customers?cpfCnpj=${customerCpf}`, {
-    headers: { 'access_token': ASAAS_API_KEY }
+async function readJsonBody(req: any): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    req.on('data', (chunk: Buffer) => chunks.push(chunk));
+    req.on('end', () => {
+      try {
+        resolve(JSON.parse(Buffer.concat(chunks).toString() || '{}'));
+      } catch {
+        reject(new Error('Invalid JSON'));
+      }
+    });
+    req.on('error', (err: Error) => reject(err));
   });
-  const searchData = await searchRes.json();
-  if (searchData.data?.length > 0) return searchData.data[0].id;
-
-  // Create
-  const createRes = await fetch(`${API_BASE}/customers`, {
-    method: 'POST',
-    headers: { 'access_token': ASAAS_API_KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name,
-      cpfCnpj: customerCpf,
-      email: email || `${name.replace(/\s+/g, '').toLowerCase()}@temp.com`,
-      phone: cleanPhone,
-      notificationDisabled: true
-    })
-  });
-  const createData = await createRes.json();
-  return createData.id;
 }
 
 export default async function handler(req: any, res: any) {
+  res.setHeader('Content-Type', 'application/json');
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { customerName, customerEmail, customerPhone, customerCpf, productName, productPrice, quantity, shopId } = req.body || {};
+  let body: any = {};
+  try {
+    body = await readJsonBody(req);
+  } catch {
+    return res.status(400).json({ error: 'Invalid JSON' });
+  }
 
-  if (!customerName || !productName || !productPrice || !quantity || !shopId) {
-    return res.status(400).json({ error: 'Dados incompletos', message: 'Preencha todos os campos obrigatórios.' });
+  const { customerName, customerEmail, customerPhone, customerCpf, productName, productPrice, quantity, shopId } = body || {};
+  if (!customerName || !customerCpf || !productName || !productPrice || !quantity || !shopId) {
+    return res.status(400).json({ error: 'Dados incompletos', message: 'Preencha todos os campos obrigatórios, incluindo CPF.' });
   }
 
   try {
-    const customerId = await findOrCreateCustomer(customerName, customerEmail || '', customerPhone || '', customerCpf);
+    requireAsaasKey();
+    const customerId = await findOrCreateCustomer({
+      name: customerName,
+      email: customerEmail || '',
+      phone: customerPhone,
+      cpfCnpj: customerCpf,
+    });
 
     const totalValue = (Number(productPrice) * Number(quantity)).toFixed(2);
+    const dueDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-    const paymentRes = await fetch(`${API_BASE}/payments`, {
+    const paymentRes = await fetch('https://api.asaas.com/v3/payments', {
       method: 'POST',
-      headers: { 'access_token': ASAAS_API_KEY, 'Content-Type': 'application/json' },
+      headers: { access_token: process.env.ASAAS_API_KEY || '', 'Content-Type': 'application/json' },
       body: JSON.stringify({
         customer: customerId,
         billingType: 'PIX',
         value: Number(totalValue),
-        dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        dueDate,
         description: `${quantity}x ${productName}`,
         externalReference: shopId,
-      })
+      }),
     });
-    const paymentData = await paymentRes.json();
-
-    if (paymentData.errors) {
-      const msg = paymentData.errors.map((e: any) => e.description).join('; ');
-      return res.status(400).json({ error: msg, message: msg });
+    const paymentData: any = await paymentRes.json().catch(() => ({}));
+    if (!paymentRes.ok || paymentData.errors) {
+      const msg = paymentData.errors?.map((e: any) => e.description).join('; ') || 'Asaas error';
+      return res.status(paymentRes.status || 400).json({ error: msg, message: msg });
     }
 
-    const paymentId = paymentData.id;
-
-    // Get PIX QR Code
-    const pixRes = await fetch(`${API_BASE}/payments/${paymentId}/pixQrCode`, {
-      headers: { 'access_token': ASAAS_API_KEY }
-    });
-    const pixData = await pixRes.json();
-
+    const pix = await getPixQrCode(paymentData.id);
     return res.status(200).json({
-      paymentId,
+      paymentId: paymentData.id,
       pix: {
-        encodedImage: pixData.encodedImage ? `data:image/png;base64,${pixData.encodedImage}` : '',
-        payload: pixData.payload || '',
+        encodedImage: pix.encodedImage ? `data:image/png;base64,${pix.encodedImage}` : '',
+        payload: pix.payload,
       },
       value: totalValue,
     });

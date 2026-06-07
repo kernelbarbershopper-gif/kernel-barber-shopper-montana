@@ -326,8 +326,9 @@ export async function getActiveShopsCount() {
 }
 
 export async function getTotalUsersCount() {
-  const { count } = await supabase.auth.admin.listUsers();
-  return count || 0;
+  const res = await supabase.auth.admin.listUsers();
+  // listUsers returns { data: { users: User[] }, ... }; we only have length
+  return res.data?.users?.length || 0;
 }
 
 export async function getMRR() {
@@ -410,6 +411,12 @@ export const rejectWithdrawal = async (id: string, adminNote?: string) => {
 export const requestWithdrawal = async (shopId: string, amount: number, pixKey: string) => {
   const { error } = await supabase.from('withdrawals').insert({ shop_id: shopId, amount, pix_key: pixKey, status: 'pending' });
   if (error) throw error;
+};
+
+export const getGlobalSettings = async () => {
+  const { data, error } = await supabase.from('settings').select('*').maybeSingle();
+  if (error && error.code !== 'PGRST116') throw error;
+  return data;
 };
 
 export const subscribeToMachineRequests = (shopId: string, callback: (data: any[]) => void) => {

@@ -21,9 +21,9 @@ async function seed() {
   // Plans (id must be unique)
   const plans = [
     { id: 'free', name: 'Free', price: 0, is_active: true },
-    { id: 'basic', name: 'Basic', price: 39.99, is_active: true },
-    { id: 'pro', name: 'Pro', price: 79.99, is_active: true },
-    { id: 'enterprise', name: 'Enterprise', price: 199.99, is_active: true },
+    { id: 'basic', name: 'Basic', price: 29.90, is_active: true },
+    { id: 'pro', name: 'Pro', price: 49.90, is_active: true },
+    { id: 'enterprise', name: 'Enterprise', price: 79.90, is_active: true },
   ];
   for (const p of plans) {
     const { error } = await supabase.from('plans').upsert(p, { onConflict: 'id' });

@@ -197,7 +197,7 @@ export default function PlansManagement({ plans, onAddPlan, onUpdatePlan, onDele
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-[#888] uppercase tracking-widest mb-1">Preço (R$)</label>
+                  <label className="block text-xs font-bold text-[#888] uppercase tracking-widest mb-1">Preço ($)</label>
                   <input type="number" step="0.01" min="0" value={form.price} onChange={(e) => setForm((p) => ({ ...p, price: Number(e.target.value) }))}
                     className="w-full bg-[#141414] border border-[#2A2A2A] rounded-xl px-4 py-2.5 text-sm text-white placeholder-[#555] focus:outline-none focus:border-[#C9A84C]" />
                 </div>

@@ -1,64 +1,36 @@
 ﻿import { createClient } from '@supabase/supabase-js';
+import { findOrCreateCustomer, getPixQrCode, requireAsaasKey } from './_lib/asaas';
 
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://ejdsuslapvzsseqotvhp.supabase.co';
+const SUPABASE_URL = process.env.SUPABASE_URL || '';
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || '';
-const ASAAS_API_KEY = process.env.ASAAS_API_KEY || '';
 
-const API_BASE = 'https://api.asaas.com/v3';
-
-async function findOrCreateCustomer(email: string, cpfCnpj?: string): Promise<string> {
-  const customerCpf = cpfCnpj || '24971563792';
-  const listRes = await fetch(`${API_BASE}/customers?email=${encodeURIComponent(email)}`, {
-    headers: { 'access_token': ASAAS_API_KEY },
+async function readJsonBody(req: any): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    req.on('data', (chunk: Buffer) => chunks.push(chunk));
+    req.on('end', () => {
+      try {
+        resolve(JSON.parse(Buffer.concat(chunks).toString() || '{}'));
+      } catch {
+        reject(new Error('Invalid JSON'));
+      }
+    });
+    req.on('error', (err: Error) => reject(err));
   });
-  const listText = await listRes.text();
-  let listData;
-  try { listData = JSON.parse(listText); } catch { throw new Error(`Asaas list customers failed: ${listText}`); }
-  if (listData.data && listData.data.length > 0) {
-    const existing = listData.data[0];
-    if (!existing.cpfCnpj) {
-      await fetch(`${API_BASE}/customers/${existing.id}`, {
-        method: 'POST',
-        headers: { 'access_token': ASAAS_API_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cpfCnpj: customerCpf }),
-      });
-    }
-    return existing.id;
-  }
-  const createRes = await fetch(`${API_BASE}/customers`, {
-    method: 'POST',
-    headers: {
-      'access_token': ASAAS_API_KEY,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ name: email.split('@')[0], email, cpfCnpj: customerCpf }),
-  });
-  const createText = await createRes.text();
-  let createData;
-  try { createData = JSON.parse(createText); } catch { throw new Error(`Asaas create customer failed: ${createText}`); }
-  if (!createRes.ok) throw new Error(`Asaas create customer error: ${JSON.stringify(createData)}`);
-  return createData.id;
 }
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Content-Type', 'application/json');
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   let body: any = {};
   try {
-    const rawBody = await new Promise<string>((resolve, reject) => {
-      const chunks: Buffer[] = [];
-      req.on('data', (chunk: Buffer) => chunks.push(chunk));
-      req.on('end', () => resolve(Buffer.concat(chunks).toString()));
-      req.on('error', (err: Error) => reject(err));
-    });
-    body = JSON.parse(rawBody);
+    body = await readJsonBody(req);
   } catch {
     return res.status(400).json({ error: 'Invalid JSON' });
   }
+
+  const idempotencyKey = req.headers['idempotency-key'] as string | undefined;
 
   try {
     const { planId, planName, amount, email, cycle, cpfCnpj, billingType } = body;
@@ -69,52 +41,39 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ error: 'CPF_CNPJ_REQUIRED', message: 'Informe seu CPF ou CNPJ para continuar' });
     }
 
-    const customerId = await findOrCreateCustomer(email, cpfCnpj);
+    requireAsaasKey();
+    const customerId = await findOrCreateCustomer({ name: email.split('@')[0], email, cpfCnpj });
     const type = billingType || 'PIX';
-
-    const nextDueDate = new Date();
-    nextDueDate.setDate(nextDueDate.getDate() + 3);
-    const nextDueDateStr = nextDueDate.toISOString().split('T')[0];
+    const nextDueDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     const subscriptionBody = {
       customer: customerId,
       billingType: type,
-      nextDueDate: nextDueDateStr,
+      nextDueDate,
       value: amount / 100,
       cycle: cycle || 'MONTHLY',
       description: `Assinatura Plano ${planName || 'Barber Shop'}`,
       externalReference: planId,
     };
 
-    console.log('Asaas request:', JSON.stringify(subscriptionBody));
-
-    const response = await fetch(`${API_BASE}/subscriptions`, {
+    const response = await fetch('https://api.asaas.com/v3/subscriptions', {
       method: 'POST',
-      headers: {
-        'access_token': ASAAS_API_KEY,
-        'Content-Type': 'application/json',
-      },
+      headers: { access_token: process.env.ASAAS_API_KEY || '', 'Content-Type': 'application/json' },
       body: JSON.stringify(subscriptionBody),
     });
-
     const responseText = await response.text();
-    console.log('Asaas response:', response.status, responseText.substring(0, 500));
-
-    let data;
-    try { data = JSON.parse(responseText); } catch { throw new Error(`Asaas create subscription returned invalid JSON: ${responseText}`); }
+    let data: any;
+    try { data = JSON.parse(responseText); } catch { throw new Error(`Asaas invalid JSON: ${responseText}`); }
 
     if (!response.ok) {
       if (type === 'PIX' && data.errors?.some((e: any) => e.code === 'invalid_billingType')) {
-        const boletoResponse = await fetch(`${API_BASE}/subscriptions`, {
+        const boletoResponse = await fetch('https://api.asaas.com/v3/subscriptions', {
           method: 'POST',
-          headers: {
-            'access_token': ASAAS_API_KEY,
-            'Content-Type': 'application/json',
-          },
+          headers: { access_token: process.env.ASAAS_API_KEY || '', 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...subscriptionBody, billingType: 'BOLETO' }),
         });
         const boletoText = await boletoResponse.text();
-        try { data = JSON.parse(boletoText); } catch { throw new Error(`Asaas boleto fallback subscription failed: ${boletoText}`); }
+        try { data = JSON.parse(boletoText); } catch { throw new Error(`Asaas boleto fallback failed: ${boletoText}`); }
         if (!boletoResponse.ok) {
           const errMsg = data?.errors?.[0]?.description || data?.error || 'Erro no processamento';
           return res.status(boletoResponse.status).json({ error: 'Asaas error', message: errMsg, detail: data });
@@ -135,30 +94,17 @@ export default async function handler(req: any, res: any) {
       billingType: data.billingType || type,
     };
 
-    // Fetch first payment for details
     try {
-      const paymentsRes = await fetch(`${API_BASE}/subscriptions/${data.id}/payments`, {
-        headers: { 'access_token': ASAAS_API_KEY },
+      const paymentsRes = await fetch(`https://api.asaas.com/v3/subscriptions/${data.id}/payments`, {
+        headers: { access_token: process.env.ASAAS_API_KEY || '' },
       });
-      const paymentsText = await paymentsRes.text();
-      let paymentsData;
-      try { paymentsData = JSON.parse(paymentsText); } catch { console.error('Failed to parse payments:', paymentsText); paymentsData = null; }
+      const paymentsData: any = await paymentsRes.json().catch(() => null);
       const firstPayment = paymentsData?.data?.[0];
-
       if (data.billingType === 'PIX' || type === 'PIX') {
         if (firstPayment) {
-          let pixInfo = { encodedImage: '', payload: '' };
-          try {
-            const pixRes = await fetch(`${API_BASE}/payments/${firstPayment.id}/pixQrCode`, {
-              headers: { 'access_token': ASAAS_API_KEY },
-            });
-            const pixText = await pixRes.text();
-            try { pixInfo = JSON.parse(pixText); } catch { console.error('Failed to parse PIX QR Code:', pixText); }
-          } catch (e) {
-            console.error('Failed to get PIX QR Code:', e);
-          }
-          result.brCode = pixInfo.payload || '';
-          result.brCodeBase64 = pixInfo.encodedImage ? `data:image/png;base64,${pixInfo.encodedImage}` : '';
+          const pix = await getPixQrCode(firstPayment.id);
+          result.brCode = pix.payload;
+          result.brCodeBase64 = pix.encodedImage ? `data:image/png;base64,${pix.encodedImage}` : '';
         }
       } else {
         if (firstPayment) {
@@ -168,29 +114,21 @@ export default async function handler(req: any, res: any) {
       }
     } catch (e) {
       console.error('Failed to fetch subscription payments:', e);
-      if (!(data.billingType === 'PIX' || type === 'PIX')) {
-        result.bankSlipUrl = data.bankSlipUrl || data.invoiceUrl || '';
-        result.barCode = data.barCode || '';
-      }
     }
 
-    if (SUPABASE_SERVICE_KEY) {
+    if (SUPABASE_URL && SUPABASE_SERVICE_KEY) {
       try {
         const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-        let shopId = null;
-        try {
-          const { data: shopData } = await supabase.from('shops').select('id').eq('email', email).limit(1).single();
-          shopId = shopData?.id || null;
-        } catch {}
+        const { data: shopData } = await supabase.from('shops').select('id').eq('email', email).limit(1).single();
         await supabase.from('subscriptions').insert({
           asaas_subscription_id: data.id,
           asaas_customer_id: customerId,
-          shop_id: shopId,
+          shop_id: shopData?.id || null,
           plan_id: planId,
           email,
           status: data.status,
           value: amount / 100,
-      cycle: cycle === 'YEARLY' ? 'ANNUALLY' : (cycle || 'MONTHLY'),
+          cycle: cycle === 'YEARLY' ? 'ANNUALLY' : (cycle || 'MONTHLY'),
           payment_method: 'PIX',
           current_period_start: new Date().toISOString(),
           current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
@@ -201,11 +139,12 @@ export default async function handler(req: any, res: any) {
       }
     }
 
+    if (idempotencyKey) res.setHeader('Idempotency-Key', idempotencyKey);
     return res.status(200).json(result);
   } catch (error: any) {
-    console.error('Subscription error:', error.message, error.stack || '');
+    console.error('Subscription error:', error.message);
     if (error.message?.startsWith('Asaas')) {
-      return res.status(400).json({ error: 'Asaas error', message: error.message.substring(0, 200), detail: error.message.substring(0, 500) });
+      return res.status(400).json({ error: 'Asaas error', message: error.message.substring(0, 200) });
     }
     return res.status(500).json({ error: error.message || 'Internal server error' });
   }

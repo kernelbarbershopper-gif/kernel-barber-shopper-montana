@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -46,11 +46,12 @@ import {
   Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Toaster, toast } from 'sonner';
 import { cn } from './lib/utils';
-import { chatWithAI } from './services/huggingfaceService';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { useLocale } from './contexts/LocaleContext';
 import LanguageSwitcher from './components/LanguageSwitcher';
+import PricingView from './components/PricingView';
 // Global handler for unhandled promise rejections
 if (typeof window !== 'undefined') {
   window.addEventListener('unhandledrejection', (event) => {
@@ -95,6 +96,7 @@ import {
   saveMachineRequest,
   checkMachineRequestExists
 } from './services/dbService';
+import { useMaintenance } from './hooks/useMaintenance';
 
 type View = 'dashboard' | 'agenda' | 'barbers' | 'estoque' | 'financeiro' | 'ia' | 'admin' | 'pricing' | 'setup' | 'welcome';
 
@@ -121,7 +123,7 @@ function MainApp() {
   const [messages, setMessages] = React.useState<Message[]>([
     {
       role: 'ia',
-      text: '👋 Bem-vindo ao KERNEL BARBER SHOPPER! Sou a IA oficial da plataforma. Posso te apresentar nossos módulos (Agenda, Estoque, Financeiro, Barbeiros), explicar os planos ou te ajudar com dados do sua barbearia. O que você quer saber?',
+      text: '?? Bem-vindo ao KERNEL BARBER SHOPPER! Sou a IA oficial da plataforma. Posso te apresentar nossos m�dulos (Agenda, Estoque, Financeiro, Barbeiros), explicar os planos ou te ajudar com dados do sua barbearia. O que voc� quer saber?',
       time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
     }
   ]);
@@ -135,6 +137,7 @@ function MainApp() {
   const [notifOpen, setNotifOpen] = React.useState(false);
   const notifRef = React.useRef<HTMLDivElement>(null);
   const unreadCount = React.useMemo(() => notifications.filter((n: any) => !n.read).length, [notifications]);
+  const maintenance = useMaintenance();
 
   const PLAN_FEATURES: Record<string, { appointments: number; barbers: number; stock: boolean; financeiro: boolean; ia: boolean; label: string; maxProducts: number; maxStoreProducts: number }> = {
     free: { appointments: 10, barbers: 1, stock: true, financeiro: false, ia: false, label: 'Free', maxProducts: 5, maxStoreProducts: 0 },
@@ -201,7 +204,7 @@ function MainApp() {
           return [{
             id: `app-${app.id}`,
             type: 'appointment',
-            message: `Novo agendamento de ${app.user_name || 'cliente'} às ${app.date ? new Date(app.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--'}`,
+            message: `Novo agendamento de ${app.user_name || 'cliente'} �s ${app.date ? new Date(app.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--'}`,
             time: new Date().toISOString(),
             read: false,
             view: 'agenda',
@@ -218,7 +221,7 @@ function MainApp() {
           return [{
             id: `stock-${item.id}`,
             type: 'stock',
-            message: `Estoque baixo: ${item.name} — apenas ${item.quantity} unidade(s)`,
+            message: `Estoque baixo: ${item.name} � apenas ${item.quantity} unidade(s)`,
             time: new Date().toISOString(),
             read: false,
             view: 'estoque',
@@ -250,19 +253,19 @@ function MainApp() {
         setActiveView('ia');
         setMessages([{
           role: 'ia',
-          text: `🎉 **Bem-vindo ao KERNEL BARBER SHOPPER!**
+          text: `?? **Bem-vindo ao KERNEL BARBER SHOPPER!**
 
-Que bom ter você como dono da plataforma! Vou te guiar pelos principais módulos:
+Que bom ter voc� como dono da plataforma! Vou te guiar pelos principais m�dulos:
 
-**1️⃣ 📋 Dashboard** — Métricas em tempo real do sua barbearia
-**2️⃣ 📅 Agenda** — Gerencie agendamentos de forma inteligente
-**3️⃣ 👥 Barbeiros** — Cadastre e acompanhe sua equipe
-**4️⃣ 📦 Estoque** — Controle de produtos com alertas inteligentes
-**5️⃣ 💰 Financeiro** — Receitas, despesas e lucro
-**6️⃣ 🤖 IA (eu!)** — Estou aqui para ajudar sempre
-**7️⃣ 💳 Planos** — Escolha o melhor para sua barbearia
+**1?? ?? Dashboard** � M�tricas em tempo real do sua barbearia
+**2?? ?? Agenda** � Gerencie agendamentos de forma inteligente
+**3?? ?? Barbeiros** � Cadastre e acompanhe sua equipe
+**4?? ?? Estoque** � Controle de produtos com alertas inteligentes
+**5?? ?? Financeiro** � Receitas, despesas e lucro
+**6?? ?? IA (eu!)** � Estou aqui para ajudar sempre
+**7?? ?? Planos** � Escolha o melhor para sua barbearia
 
-**Quer saber mais sobre algum módulo?** É só me perguntar! 👇`,
+**Quer saber mais sobre algum m�dulo?** � s� me perguntar! ??`,
           time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
         }]);
       }
@@ -299,7 +302,7 @@ Que bom ter você como dono da plataforma! Vou te guiar pelos principais módulo
     // Build real context from shop data
     const buildContext = async () => {
       let context = `BARBEARIA: KERNEL BARBER SHOPPER\n`;
-      context += `Usuário: ${user?.displayName || 'Admin'}\n`;
+      context += `Usu�rio: ${user?.displayName || 'Admin'}\n`;
       
       const fmtDate = (dt: string) => dt.split('T')[0];
       const fmtTime = (dt: string) => {
@@ -315,31 +318,31 @@ Que bom ter você como dono da plataforma! Vou te guiar pelos principais módulo
         const confirmedToday = todayApps.filter((a: any) => fmtDate(a.date) === today && a.status === 'confirmed');
         const pendingToday = todayApps.filter((a: any) => fmtDate(a.date) === today && a.status === 'pending');
         
-        context += `\n📅 AGENDAMENTOS HOJE:\n`;
+        context += `\n?? AGENDAMENTOS HOJE:\n`;
         context += `- Confirmados: ${confirmedToday.length}\n`;
         context += `- Pendentes: ${pendingToday.length}\n`;
         
         if (confirmedToday.length > 0) {
           context += `Detalhes (confirmados):\n`;
           confirmedToday.slice(0, 5).forEach((a: any) => {
-            context += `  • ${a.time || fmtTime(a.date)} - ${a.user_name || 'Cliente'} (${a.service_name || a.service || 'Serviço'}) - R$ ${Number(a.service_price) || 0} - Tel: ${a.user_phone || 'N/A'}\n`;
+            context += `  � ${a.time || fmtTime(a.date)} - ${a.user_name || 'Cliente'} (${a.service_name || a.service || 'Servi�o'}) - $${Number(a.service_price) || 0} - Tel: ${a.user_phone || 'N/A'}\n`;
           });
         }
         if (pendingToday.length > 0) {
           context += `\nPendentes:\n`;
           pendingToday.slice(0, 5).forEach((a: any) => {
-            context += `  • ${a.time || fmtTime(a.date)} - ${a.user_name || 'Cliente'} (${a.service_name || a.service || 'Serviço'}) - Tel: ${a.user_phone || 'N/A'}\n`;
+            context += `  � ${a.time || fmtTime(a.date)} - ${a.user_name || 'Cliente'} (${a.service_name || a.service || 'Servi�o'}) - Tel: ${a.user_phone || 'N/A'}\n`;
           });
         }
 
         const allConfirmed = todayApps.filter((a: any) => a.status === 'confirmed');
         const uniqueClients = [...new Map(allConfirmed.filter((a: any) => a.user_name).map((a: any) => [a.user_name, a])).values()];
         if (uniqueClients.length > 0) {
-          context += `\n👥 CLIENTES CADASTRADOS:\n`;
+          context += `\n?? CLIENTES CADASTRADOS:\n`;
           uniqueClients.slice(0, 15).forEach((c: any) => {
             const totalVisits = todayApps.filter((a: any) => a.user_name === c.user_name && a.status === 'confirmed').length;
             const lastVisit = [...todayApps].reverse().find((a: any) => a.user_name === c.user_name);
-            context += `  • ${c.user_name} - Tel: ${c.user_phone || 'N/A'} - ${totalVisits} visita(s)${lastVisit ? ` - Último: ${lastVisit.service_name || lastVisit.service || 'N/A'}` : ''}\n`;
+            context += `  � ${c.user_name} - Tel: ${c.user_phone || 'N/A'} - ${totalVisits} visita(s)${lastVisit ? ` - �ltimo: ${lastVisit.service_name || lastVisit.service || 'N/A'}` : ''}\n`;
           });
         }
         
@@ -349,9 +352,9 @@ Que bom ter você como dono da plataforma! Vou te guiar pelos principais módulo
           });
           const lowStock = stockItems.filter((item: any) => (item.quantity || 0) <= 5);
           if (lowStock.length > 0) {
-            context += `\n**⚠️ Estoque Baixo:**\n`;
+            context += `\n**?? Estoque Baixo:**\n`;
             lowStock.slice(0, 3).forEach((item: any) => {
-              context += `  • ${item.name}: ${item.quantity || 0} unidades\n`;
+              context += `  � ${item.name}: ${item.quantity || 0} unidades\n`;
             });
           }
         } catch (e) {
@@ -364,12 +367,12 @@ Que bom ter você como dono da plataforma! Vou te guiar pelos principais módulo
         const recentApps = todayApps.filter((a: any) => fmtDate(a.date) >= dateStr && a.status === 'confirmed');
         const revenue = recentApps.reduce((sum: number, app: any) => sum + (Number(app.service_price) || 0), 0);
         
-        context += `\n💰 FINANCEIRO (30 dias):\n`;
+        context += `\n?? FINANCEIRO (30 dias):\n`;
         context += `- Agendamentos: ${recentApps.length}\n`;
-        context += `- Receita: R$ ${revenue.toFixed(2)}\n`;
-        context += `- Ticket médio: R$ ${recentApps.length > 0 ? (revenue / recentApps.length).toFixed(2) : '0'}\n`;
+        context += `- Receita: $${revenue.toFixed(2)}\n`;
+        context += `- Ticket m�dio: $${recentApps.length > 0 ? (revenue / recentApps.length).toFixed(2) : '0'}\n`;
       } else {
-        context += `\n⚠️ Nenhuma loja selecionada ainda.\n`;
+        context += `\n?? Nenhuma loja selecionada ainda.\n`;
       }
       
       return context;
@@ -378,8 +381,14 @@ Que bom ter você como dono da plataforma! Vou te guiar pelos principais módulo
     try {
       const context = await buildContext();
       const history = messages.slice(1);
-      const aiResponse = await chatWithAI(text, context, history);
-      
+      const r = await fetch('/api/chat-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, context, history }),
+      });
+      const data = await r.json();
+      const aiResponse = data.reply || data.error || '?? IA temporariamente indispon�vel.';
+
       setIsTyping(false);
       setMessages(prev => [...prev, {
         role: 'ia',
@@ -391,7 +400,7 @@ Que bom ter você como dono da plataforma! Vou te guiar pelos principais módulo
       setIsTyping(false);
       setMessages(prev => [...prev, {
         role: 'ia',
-        text: '❌ Desculpe, tive um problema ao processar sua mensagem. Tente novamente.',
+        text: '? Desculpe, tive um problema ao processar sua mensagem. Tente novamente.',
         time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
       }]);
     }
@@ -410,6 +419,18 @@ Que bom ter você como dono da plataforma! Vou te guiar pelos principais módulo
   // Admin: ONLY sees admin page, never the beauty dashboard
   if (isAdminFinal) {
     return <ErrorBoundary><AdminLayout user={user} logout={logout} activeTab={activeAdminTab} setActiveTab={setActiveAdminTab} /></ErrorBoundary>;
+  }
+  if (!isAdminFinal && maintenance) {
+    return (
+      <ErrorBoundary>
+        <div className="min-h-screen flex items-center justify-center bg-[#0A0A0A] text-white">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold">{t('Manuten��o')}</h1>
+            <p className="mt-4">{t('O sistema est� em manuten��o. Por favor, tente novamente mais tarde.')}</p>
+          </div>
+        </div>
+      </ErrorBoundary>
+    );
   }
 
   return (
@@ -430,7 +451,7 @@ Que bom ter você como dono da plataforma! Vou te guiar pelos principais módulo
                 )}
               >
                 <item.icon className="w-5 h-5" />
-                <span className="text-[9px] font-bold">{item.locked ? `🔒 ${item.label}` : item.label}</span>
+                <span className="text-[9px] font-bold">{item.locked ? `?? ${item.label}` : item.label}</span>
               </button>
             ))}
           </div>
@@ -462,7 +483,7 @@ Que bom ter você como dono da plataforma! Vou te guiar pelos principais módulo
                   : item.locked ? "text-[#555] cursor-not-allowed" : "text-[#888] hover:text-[#C9A84C] hover:bg-[#C9A84C]/10"
               )}
             >
-              {item.locked ? `🔒 ${item.label}` : item.label}
+              {item.locked ? `?? ${item.label}` : item.label}
             </button>
           ))}
         </div>
@@ -484,7 +505,7 @@ Que bom ter você como dono da plataforma! Vou te guiar pelos principais módulo
             {notifOpen && (
               <div className="absolute right-0 mt-2 w-80 bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl shadow-2xl shadow-black/50 overflow-hidden z-50">
                 <div className="p-3 border-b border-[#2A2A2A] flex items-center justify-between">
-                  <p className="text-xs font-bold text-white uppercase tracking-widest">Notificações</p>
+                  <p className="text-xs font-bold text-white uppercase tracking-widest">Notifica��es</p>
                   {unreadCount > 0 && (
                     <button
                       onClick={() => setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))}
@@ -497,7 +518,7 @@ Que bom ter você como dono da plataforma! Vou te guiar pelos principais módulo
                 <div className="max-h-80 overflow-y-auto custom-scroll">
                   {notifications.length === 0 ? (
                     <div className="p-6 text-center">
-                      <p className="text-xs text-[#555]">Nenhuma notificação</p>
+                      <p className="text-xs text-[#555]">Nenhuma notifica��o</p>
                     </div>
                   ) : (
                     notifications.map((n: any) => (
@@ -539,7 +560,7 @@ Que bom ter você como dono da plataforma! Vou te guiar pelos principais módulo
           </button>
           <div className="hidden sm:block text-right">
             <p className="text-[10px] text-[#888] font-bold uppercase tracking-widest leading-none mb-1">Logado como</p>
-            <p className="text-xs font-bold text-white leading-none">{user?.displayName?.split(' ')[0] || 'Usuário'}</p>
+            <p className="text-xs font-bold text-white leading-none">{user?.displayName?.split(' ')[0] || 'Usu�rio'}</p>
           </div>
         </div>
       </nav>
@@ -561,7 +582,7 @@ Que bom ter você como dono da plataforma! Vou te guiar pelos principais módulo
                 )}
               >
                 <item.icon className={cn("w-4 h-4", activeView === item.id ? "text-[#C9A84C]" : "")} />
-                <span>{item.locked ? `🔒 ${item.label}` : item.label}</span>
+                <span>{item.locked ? `?? ${item.label}` : item.label}</span>
               </button>
             ))}
 
@@ -607,6 +628,38 @@ Que bom ter você como dono da plataforma! Vou te guiar pelos principais módulo
 }
 
 function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
+  // System status (maintenance) handling
+  const [globalSettings, setGlobalSettings] = React.useState<any>(null);
+  const [loadingSettings, setLoadingSettings] = React.useState(true);
+
+  // Load settings once
+  React.useEffect(() => {
+    const load = async () => {
+      try {
+        const { data, error } = await supabase.from('settings').select('*').maybeSingle();
+        if (error && error.code !== 'PGRST116') throw error;
+        if (data) {
+          setGlobalSettings(data);
+        } else {
+          // create default row if none
+          const { data: inserted } = await supabase.from('settings').insert({ system_online: true });
+          setGlobalSettings(inserted[0]);
+        }
+      } catch (e) {
+        console.error('Error loading settings', e);
+      } finally {
+        setLoadingSettings(false);
+      }
+    };
+    load();
+  }, []);
+
+  const toggleSystem = async () => {
+    if (!globalSettings) return;
+    const newVal = !globalSettings.system_online;
+    await supabase.from('settings').upsert({ id: globalSettings.id, system_online: newVal });
+    setGlobalSettings({ ...globalSettings, system_online: newVal });
+  };
   const { t } = useLocale();
   const [shops, setShops] = React.useState<any[]>([]);
   const [plans, setPlans] = React.useState<any[]>([]);
@@ -721,7 +774,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm('Tem certeza que deseja deletar este usuário?')) return;
+    if (!confirm('Tem certeza que deseja deletar este usu�rio?')) return;
     try {
       await deleteUser(userId);
     } catch (error) {
@@ -795,24 +848,24 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
   };
 
   const formatDate = (dt: string) => {
-    if (!dt) return '—';
+    if (!dt) return '�';
     return new Date(dt).toLocaleDateString('pt-BR');
   };
 
   const tabs = [
-    { id: 'overview', label: t('Visão Geral'), icon: LayoutDashboard },
+    { id: 'overview', label: t('Vis�o Geral'), icon: LayoutDashboard },
     { id: 'shops', label: t('Lojas'), icon: Building2 },
     { id: 'financeiro', label: t('Financeiro'), icon: DollarSign },
     { id: 'saque', label: t('Saques'), icon: Banknote },
-    { id: 'users', label: t('Usuários'), icon: Users },
+    { id: 'users', label: t('Usu�rios'), icon: Users },
     { id: 'plans', label: t('Planos'), icon: Crown },
-    { id: 'settings', label: t('Configurações'), icon: Settings }
+    { id: 'settings', label: t('Configura��es'), icon: Settings }
   ];
 
   const statsData = [
     { label: t('Lojas Ativas'), val: stats.activeShops.toString(), icon: Building2, color: 'text-blue-500', bg: 'bg-blue-500/10' },
     { label: t('Receita Mensal (MRR)'), val: formatCurrency(stats.mrr), icon: CreditCard, color: 'text-green-500', bg: 'bg-green-500/10' },
-    { label: t('Usuários Totais'), val: stats.totalUsers.toString(), icon: Users, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+    { label: t('Usu�rios Totais'), val: stats.totalUsers.toString(), icon: Users, color: 'text-purple-500', bg: 'bg-purple-500/10' },
     { label: t('Novas Lojas (30d)'), val: stats.newShops30d.toString(), icon: TrendingUp, color: 'text-[#C9A84C]', bg: 'bg-[#C9A84C]/10' }
   ];
 
@@ -827,10 +880,21 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
           </div>
         </div>
         <div className="flex items-center gap-3 ml-auto">
-          <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-[#141414] rounded-full border border-[#2A2A2A]">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-[10px] text-[#888] font-bold uppercase tracking-widest">{t('Sistema Online')}</span>
-          </div>
+<div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full border" >
+              {loadingSettings ? (
+                <Loader2 className="w-4 h-4 text-[#C9A84C] animate-spin" />
+              ) : (
+                <button
+                  onClick={toggleSystem}
+                  className={cn(
+                    "px-3 py-1 rounded-full text-xs font-bold",
+                    globalSettings?.system_online ? "bg-[#C9A84C] text-[#0A0A0A]" : "bg-[#555] text-[#ddd]"
+                  )}
+                >
+                  {globalSettings?.system_online ? t('Sistema Online') : t('Manuten��o')}
+                </button>
+              )}
+            </div>
           <LanguageSwitcher />
           <button onClick={logout} className="w-10 h-10 rounded-full bg-[#141414] border border-[#2A2A2A] flex items-center justify-center text-[#888] hover:text-red-500 hover:border-red-500/30 transition-all">
             <LogOut className="w-4 h-4" />
@@ -845,7 +909,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
       <div className="p-8 max-w-[1400px] mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-display font-bold text-white mb-2">{t('Dashboard SaaS')}</h1>
-          <p className="text-[#888] text-sm">{t('Gerencie lojas, usuários, planos e monitore a saúde do sistema.')}</p>
+          <p className="text-[#888] text-sm">{t('Gerencie lojas, usu�rios, planos e monitore a sa�de do sistema.')}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -909,7 +973,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                           <p className="text-sm font-bold text-white">{plan.name}</p>
                           <p className="text-xs text-[#888]">{plan.features?.length || 0} recursos</p>
                         </div>
-                        <p className="text-sm font-bold text-[#C9A84C]">{plan.price === 0 ? 'Grátis' : formatCurrency(plan.price)}</p>
+                        <p className="text-sm font-bold text-[#C9A84C]">{plan.price === 0 ? 'Gr�tis' : formatCurrency(plan.price)}</p>
                       </div>
                     ))}
                   </div>
@@ -942,7 +1006,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                         <th className="text-left text-[10px] font-bold uppercase tracking-widest text-[#888] p-4">Plano</th>
                         <th className="text-left text-[10px] font-bold uppercase tracking-widest text-[#888] p-4">Expira em</th>
                         <th className="text-left text-[10px] font-bold uppercase tracking-widest text-[#888] p-4">Status</th>
-                        <th className="text-right text-[10px] font-bold uppercase tracking-widest text-[#888] p-4">Ações</th>
+                        <th className="text-right text-[10px] font-bold uppercase tracking-widest text-[#888] p-4">A��es</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -976,7 +1040,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                                     {formatDate(shop.plan_expires_at)}
                                     {new Date(shop.plan_expires_at) < new Date() && ' (vencido)'}
                                   </span>
-                                ) : <span className="text-[#555]">—</span>}
+                                ) : <span className="text-[#555]">�</span>}
                               </td>
                               <td className="p-4">
                                 <span className={cn("inline-flex items-center gap-1 text-[10px] font-bold", st.cls)}>
@@ -1029,7 +1093,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-[#888] uppercase tracking-widest mb-1">{t('Duração (dias)')}</label>
+                    <label className="block text-xs font-bold text-[#888] uppercase tracking-widest mb-1">{t('Dura��o (dias)')}</label>
                     <input type="number" min={1} max={3650} value={newShopForm.durationDays} onChange={(e) => setNewShopForm(p => ({ ...p, durationDays: Number(e.target.value) }))}
                       className="w-full bg-[#141414] border border-[#2A2A2A] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#C9A84C]" />
                   </div>
@@ -1070,7 +1134,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                   </div>
                   <div className="flex justify-between items-center p-3 bg-[#141414] rounded-xl">
                     <span className="text-xs text-[#888]">Expira em</span>
-                    <span className="text-sm text-white">{editingShop.plan_expires_at ? formatDate(editingShop.plan_expires_at) : '—'}</span>
+                    <span className="text-sm text-white">{editingShop.plan_expires_at ? formatDate(editingShop.plan_expires_at) : '�'}</span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-[#141414] rounded-xl">
                     <span className="text-xs text-[#888]">Criada em</span>
@@ -1117,7 +1181,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                 <div className="p-4 border-b border-[#2A2A2A]">
                   <div className="relative max-w-md">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#888]" />
-                    <input type="text" placeholder={t('Buscar usuários...')} value={userSearch} onChange={(e) => setUserSearch(e.target.value)}
+                    <input type="text" placeholder={t('Buscar usu�rios...')} value={userSearch} onChange={(e) => setUserSearch(e.target.value)}
                       className="w-full bg-[#141414] border border-[#2A2A2A] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-[#555] focus:outline-none focus:border-[#C9A84C]" />
                   </div>
                 </div>
@@ -1125,11 +1189,11 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-[#2A2A2A]">
-                        <th className="text-left text-[10px] font-bold uppercase tracking-widest text-[#888] p-4">Usuário</th>
+                        <th className="text-left text-[10px] font-bold uppercase tracking-widest text-[#888] p-4">Usu�rio</th>
                         <th className="text-left text-[10px] font-bold uppercase tracking-widest text-[#888] p-4">Email</th>
-                        <th className="text-left text-[10px] font-bold uppercase tracking-widest text-[#888] p-4">Função</th>
+                        <th className="text-left text-[10px] font-bold uppercase tracking-widest text-[#888] p-4">Fun��o</th>
                         <th className="text-left text-[10px] font-bold uppercase tracking-widest text-[#888] p-4">Loja</th>
-                        <th className="text-right text-[10px] font-bold uppercase tracking-widest text-[#888] p-4">Ações</th>
+                        <th className="text-right text-[10px] font-bold uppercase tracking-widest text-[#888] p-4">A��es</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1187,7 +1251,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                             </tr>
                           ))}
                           {users.length === 0 && allUsers.length === 0 && (
-                            <tr><td colSpan={5} className="text-center p-8 text-[#888] text-sm">Nenhum usuário cadastrado ainda.</td></tr>
+                            <tr><td colSpan={5} className="text-center p-8 text-[#888] text-sm">Nenhum usu�rio cadastrado ainda.</td></tr>
                           )}
                         </>
                       )}
@@ -1235,7 +1299,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                             <div className="w-10 h-10 rounded-xl bg-[#2A2A2A] flex items-center justify-center font-bold text-[#888]">{shop.name?.charAt(0) || '?'}</div>
                             <div>
                               <p className="text-sm font-bold text-white">{shop.name}</p>
-                              <p className="text-xs text-[#888]">{planName} {lastPay ? `• Último: ${formatDate(lastPay.created_at)}` : ''}</p>
+                              <p className="text-xs text-[#888]">{planName} {lastPay ? `� �ltimo: ${formatDate(lastPay.created_at)}` : ''}</p>
                             </div>
                           </div>
                           <p className="text-sm font-bold text-green-500">{formatCurrency(totalPaid)}</p>
@@ -1245,7 +1309,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                   </div>
                 </div>
                 <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-6">
-                  <h3 className="text-sm font-bold text-[#888] uppercase tracking-widest mb-4">Últimas Transações</h3>
+                  <h3 className="text-sm font-bold text-[#888] uppercase tracking-widest mb-4">�ltimas Transa��es</h3>
                   <div className="space-y-3 max-h-[400px] overflow-y-auto">
                     {[...payments.map(p => ({ ...p, type: 'payment' })), ...subscriptions.map(s => ({ ...s, type: 'subscription' }))]
                       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
@@ -1259,7 +1323,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                               </div>
                               <div>
                                 <p className="text-xs font-bold text-white">{t.email || 'N/A'}</p>
-                                <p className="text-[10px] text-[#888]">{t.type === 'subscription' ? 'Assinatura' : 'Pagamento'} • {formatDate(t.created_at)}</p>
+                                <p className="text-[10px] text-[#888]">{t.type === 'subscription' ? 'Assinatura' : 'Pagamento'} � {formatDate(t.created_at)}</p>
                               </div>
                             </div>
                             <div className="text-right">
@@ -1269,7 +1333,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                           </div>
                         );
                       })}
-                    {payments.length === 0 && subscriptions.length === 0 && <p className="text-[#888] text-sm text-center py-4">Nenhuma transação ainda</p>}
+                    {payments.length === 0 && subscriptions.length === 0 && <p className="text-[#888] text-sm text-center py-4">Nenhuma transa��o ainda</p>}
                   </div>
                 </div>
               </div>
@@ -1280,7 +1344,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
             <motion.div key="saque" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
               <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl overflow-hidden">
                 <div className="p-4 border-b border-[#2A2A2A]">
-                  <h3 className="text-sm font-bold text-[#888] uppercase tracking-widest">Solicitações de Saque</h3>
+                  <h3 className="text-sm font-bold text-[#888] uppercase tracking-widest">Solicita��es de Saque</h3>
                   <p className="text-xs text-[#555] mt-1">Gerencie os pedidos de saque das lojas</p>
                 </div>
                 <div className="overflow-x-auto">
@@ -1292,12 +1356,12 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                         <th className="text-left text-[10px] font-bold uppercase tracking-widest text-[#888] p-4">Chave PIX</th>
                         <th className="text-left text-[10px] font-bold uppercase tracking-widest text-[#888] p-4">Data</th>
                         <th className="text-left text-[10px] font-bold uppercase tracking-widest text-[#888] p-4">Status</th>
-                        <th className="text-right text-[10px] font-bold uppercase tracking-widest text-[#888] p-4">Ações</th>
+                        <th className="text-right text-[10px] font-bold uppercase tracking-widest text-[#888] p-4">A��es</th>
                       </tr>
                     </thead>
                     <tbody>
                       {withdrawals.length === 0 ? (
-                        <tr><td colSpan={6} className="text-center p-8 text-[#888] text-sm">Nenhuma solicitação de saque ainda.</td></tr>
+                        <tr><td colSpan={6} className="text-center p-8 text-[#888] text-sm">Nenhuma solicita��o de saque ainda.</td></tr>
                       ) : withdrawals.map((wd, i) => {
                         const st = { pending: { cls: 'text-yellow-500', label: 'Pendente' }, approved: { cls: 'text-green-500', label: 'Aprovado' }, rejected: { cls: 'text-red-500', label: 'Recusado' } }[wd.status] || { cls: 'text-[#888]', label: wd.status };
                         return (
@@ -1307,7 +1371,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                               <p className="text-xs text-[#888]">{wd.shops?.email || ''}</p>
                             </td>
                             <td className="p-4 text-sm font-bold text-white">{formatCurrency(wd.amount)}</td>
-                            <td className="p-4 text-xs text-[#eee] font-mono">{wd.pix_key || '—'}</td>
+                            <td className="p-4 text-xs text-[#eee] font-mono">{wd.pix_key || '�'}</td>
                             <td className="p-4 text-sm text-[#888]">{formatDate(wd.requested_at)}</td>
                             <td className="p-4">
                               <span className={cn("text-[10px] font-bold", st.cls)}>{st.label}</span>
@@ -1316,7 +1380,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                             <td className="p-4 text-right">
                               {wd.status === 'pending' && (
                                 <div className="flex gap-2 justify-end">
-                                  <button onClick={async () => { const note = prompt('Observação (opcional):'); await approveWithdrawal(wd.id, note || undefined); }}
+                                  <button onClick={async () => { const note = prompt('Observa��o (opcional):'); await approveWithdrawal(wd.id, note || undefined); }}
                                     className="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500/20 transition-all">
                                     Aprovar
                                   </button>
@@ -1349,7 +1413,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="space-y-6">
                   <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-6">
-                    <h3 className="text-sm font-bold text-[#888] uppercase tracking-widest mb-4">Integrações</h3>
+                    <h3 className="text-sm font-bold text-[#888] uppercase tracking-widest mb-4">Integra��es</h3>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between p-4 bg-[#141414] rounded-xl">
                          <div className="flex items-center gap-3">
@@ -1358,7 +1422,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                            </div>
                            <div>
                              <p className="text-sm font-bold text-white">Asaas</p>
-                             <p className="text-xs text-[#888]">Pagamentos via PIX, Boleto e Cartão</p>
+                             <p className="text-xs text-[#888]">Pagamentos via PIX, Boleto e Cart�o</p>
                            </div>
                          </div>
                          <span className="text-xs font-bold px-2 py-1 rounded-md bg-green-500/10 text-green-500">
@@ -1380,7 +1444,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                              Copiar
                            </button>
                          </div>
-                         <p className="text-[10px] text-[#555] mt-2">Configure este URL no painel do Asaas &gt; Integrações &gt; Webhook</p>
+                         <p className="text-[10px] text-[#555] mt-2">Configure este URL no painel do Asaas &gt; Integra��es &gt; Webhook</p>
                        </div>
                        <div className="p-4 bg-[#141414] rounded-xl border border-[#2A2A2A]">
                          <label className="block text-xs font-bold text-[#888] uppercase tracking-widest mb-2">Chave API (Backend)</label>
@@ -1393,7 +1457,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                   </div>
                 </div>
                 <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-8">
-                  <h3 className="text-lg font-bold text-white mb-6">Estatísticas do Sistema</h3>
+                  <h3 className="text-lg font-bold text-white mb-6">Estat�sticas do Sistema</h3>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center p-4 bg-[#141414] rounded-xl">
                       <span className="text-sm text-[#888]">Total de Lojas</span>
@@ -1412,7 +1476,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                       <span className="text-sm font-bold text-white">{plans.length}</span>
                     </div>
                     <div className="flex justify-between items-center p-4 bg-[#141414] rounded-xl">
-                      <span className="text-sm text-[#888]">Total de Usuários</span>
+                      <span className="text-sm text-[#888]">Total de Usu�rios</span>
                       <span className="text-sm font-bold text-white">{users.length + allUsers.length}</span>
                     </div>
                     <div className="flex justify-between items-center p-4 bg-[#141414] rounded-xl">
@@ -1430,7 +1494,8 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
   );
 }
 
-function LoginScreen() {\n  const { t } = useLocale();
+function LoginScreen() {
+  const { t } = useLocale();
   const { login, register } = useAuth();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
@@ -1455,9 +1520,9 @@ function LoginScreen() {\n  const { t } = useLocale();
   const formatCurrency = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
   const fakeNames = [
-    'João Silva', 'Carlos Oliveira', 'Pedro Santos', 'Lucas Costa', 'Ana Souza',
+    'Jo�o Silva', 'Carlos Oliveira', 'Pedro Santos', 'Lucas Costa', 'Ana Souza',
     'Rafael Lima', 'Marcos Pereira', 'Gabriel Alves', 'Thiago Martins', 'Felipe Rocha',
-    'André Gomes', 'Bruno Barbosa', 'Eduardo Teixeira', 'Diego Correia', 'Igor Nunes',
+    'Andr� Gomes', 'Bruno Barbosa', 'Eduardo Teixeira', 'Diego Correia', 'Igor Nunes',
   ];
   const usedNames = React.useRef(new Set());
 
@@ -1483,8 +1548,8 @@ function LoginScreen() {\n  const { t } = useLocale();
     };
 
     showNotification();
-    const t = setInterval(showNotification, 8000 + Math.random() * 12000);
-    return () => clearInterval(t);
+    const notificationInterval = setInterval(showNotification, 8000 + Math.random() * 12000);
+    return () => clearInterval(notificationInterval);
   }, [plans]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -1527,7 +1592,7 @@ function LoginScreen() {\n  const { t } = useLocale();
             </div>
             <div>
               <p className="text-xs font-bold text-white">{n.name}</p>
-              <p className="text-[10px] text-[#C9A84C]">{n.plan} — {n.time}</p>
+              <p className="text-[10px] text-[#C9A84C]">{n.plan} � {n.time}</p>
             </div>
           </motion.div>
         ))}
@@ -1535,7 +1600,7 @@ function LoginScreen() {\n  const { t } = useLocale();
 
       {/* Notification Bar */}
       <div className="bg-gradient-to-r from-[#C9A84C] to-[#E8C96A] text-[#0A0A0A] text-center py-2.5 px-4 sticky top-0 z-40">
-<p className="text-xs font-black uppercase tracking-widest">{t('PROMOÇÃO RELÂMPAGO • PRIMEIRAS 12 VAGAS •')} {String(min).padStart(2, '0')}:{String(seg).padStart(2, '0')}</p>
+<p className="text-xs font-black uppercase tracking-widest">{t('PROMO��O REL�MPAGO � PRIMEIRAS 12 VAGAS �')} {String(min).padStart(2, '0')}:{String(seg).padStart(2, '0')}</p>
       </div>
 
       {/* Hero + Login */}
@@ -1546,7 +1611,7 @@ function LoginScreen() {\n  const { t } = useLocale();
             KERNEL<br />
             <span className="text-[#C9A84C]">BEAUTY SHOPPER</span>
           </h1>
-<p className="text-[#888] text-lg max-w-lg mx-auto lg:mx-0 mb-8">{t('A gestão de luxo para sua barbearia, agora com inteligência artificial.')}</p>
+<p className="text-[#888] text-lg max-w-lg mx-auto lg:mx-0 mb-8">{t('A gest�o de luxo para sua barbearia, agora com intelig�ncia artificial.')}</p>
           <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
             <div className="flex items-center gap-2 text-sm text-[#eee] bg-[#1A1A1A] px-4 py-2 rounded-xl border border-[#2A2A2A]">
               <CheckCircle2 className="w-4 h-4 text-green-500" /> {t('IA Assistente')}
@@ -1555,7 +1620,7 @@ function LoginScreen() {\n  const { t } = useLocale();
               <CheckCircle2 className="w-4 h-4 text-green-500" /> {t('Loja Online')}
             </div>
             <div className="flex items-center gap-2 text-sm text-[#eee] bg-[#1A1A1A] px-4 py-2 rounded-xl border border-[#2A2A2A]">
-              <CheckCircle2 className="w-4 h-4 text-green-500" /> {t('Kit Profissional Grátis')}
+              <CheckCircle2 className="w-4 h-4 text-green-500" /> {t('Kit Profissional Gr�tis')}
             </div>
           </div>
         </div>
@@ -1570,7 +1635,7 @@ function LoginScreen() {\n  const { t } = useLocale();
                 {isRegistering ? t('CRIAR CONTA') : t('ACESSAR')}
               </p>
               <h2 className="text-2xl font-bold text-white mb-8">
-                {isRegistering ? t('Faça seu cadastro') : t('Bem-vinda de volta')}
+                {isRegistering ? t('Fa�a seu cadastro') : t('Bem-vinda de volta')}
               </h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <input type="email" placeholder="Email" value={email}
@@ -1582,16 +1647,16 @@ function LoginScreen() {\n  const { t } = useLocale();
                 {error && <p className="text-red-500 text-xs">{error}</p>}
                 <button type="submit" disabled={loading}
                   className="w-full bg-gradient-to-r from-[#C9A84C] to-[#E8C96A] text-[#0A0A0A] py-4 rounded-2xl font-bold hover:brightness-110 active:scale-95 transition-all shadow-xl disabled:opacity-50 text-sm">
-                  {loading ? t('Aguarde...') : (isRegistering ? t('Cadastrar Grátis') : t('Entrar'))}
+                  {loading ? t('Aguarde...') : (isRegistering ? t('Cadastrar Gr�tis') : t('Entrar'))}
                 </button>
               </form>
               <button onClick={() => { setIsRegistering(!isRegistering); setError(''); }}
                 className="mt-4 text-xs text-[#888] hover:text-[#C9A84C] transition-all w-full text-center">
-                {isRegistering ? t('Já tem conta? Entrar') : t('Não tem conta? Cadastre-se')}
+                {isRegistering ? t('J� tem conta? Entrar') : t('N�o tem conta? Cadastre-se')}
               </button>
               {isRegistering && (
                 <div className="mt-4 bg-green-500/10 border border-green-500/20 rounded-xl p-3 text-center">
-                  <p className="text-green-500 text-xs font-bold">🎉 Cadastre-se agora e garanta sua Kit Profissional Grátis!</p>
+                  <p className="text-green-500 text-xs font-bold">?? Cadastre-se agora e garanta sua Kit Profissional Gr�tis!</p>
                 </div>
               )}
             </div>
@@ -1600,7 +1665,7 @@ function LoginScreen() {\n  const { t } = useLocale();
           {/* Fake counter */}
           <div className="mt-4 text-center">
             <p className="text-[10px] text-[#555] uppercase tracking-widest font-bold">
-              🎯 Vagas promocionais restantes
+              ?? Vagas promocionais restantes
             </p>
             <div className="flex justify-center gap-3 mt-2">
               {[12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1].map((n, i) => (
@@ -1623,9 +1688,9 @@ function LoginScreen() {\n  const { t } = useLocale();
         <div className="text-center mb-10">
           <p className="text-[10px] text-[#C9A84C] font-bold uppercase tracking-[3px] mb-2">Planos</p>
           <h2 className="text-3xl font-display font-bold text-white mb-2">
-            Escolha o melhor para seu <span className="text-[#C9A84C]">salão</span>
+            Escolha o melhor para seu <span className="text-[#C9A84C]">sal�o</span>
           </h2>
-            <p className="text-[#888] text-sm">As primeiras 12 pessoas ganham condições especiais!</p>
+            <p className="text-[#888] text-sm">As primeiras 12 pessoas ganham condi��es especiais!</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -1645,44 +1710,44 @@ function LoginScreen() {\n  const { t } = useLocale();
               >
                 {isEnterprise && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#C9A84C] to-[#E8C96A] text-[#0A0A0A] text-[9px] font-bold px-4 py-1 rounded-full uppercase tracking-widest shadow-lg whitespace-nowrap">
-                    🏆 Kit Profissional Grátis
+                    ?? Kit Profissional Gr�tis
                   </div>
                 )}
                 {isPopular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#C9A84C] text-[#0A0A0A] text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">Mais Popular</div>
                 )}
                 {isFree && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-500 text-[#0A0A0A] text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">Grátis</div>
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-500 text-[#0A0A0A] text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">Gr�tis</div>
                 )}
                 <div className="text-center mb-6">
                   {isEnterprise && <p className="text-[8px] text-[#C9A84C] font-bold uppercase tracking-[3px] mb-1">RECOMENDADO</p>}
                   <h3 className="text-xl font-bold text-white mb-2">{plan.name}</h3>
                   <div className="mb-2">
                     {isFree ? (
-                      <span className="text-4xl font-bold text-green-400">Grátis</span>
+                      <span className="text-4xl font-bold text-green-400">Gr�tis</span>
                     ) : (
                       <>
                         {isEnterprise && (
                           <p className="text-[10px] text-[#555] line-through mb-1">De {formatCurrency(249.90)}</p>
                         )}
                         <span className="text-4xl font-bold text-[#C9A84C]">{formatCurrency(plan.price)}</span>
-                        <span className="text-[#888] text-sm ml-1">/{plan.interval === 'yearly' ? 'ano' : 'mês'}</span>
+                        <span className="text-[#888] text-sm ml-1">/{plan.interval === 'yearly' ? 'ano' : 'm�s'}</span>
                       </>
                     )}
                   </div>
                   {isEnterprise && (
                     <div className="bg-gradient-to-r from-[#C9A84C]/20 to-[#E8C96A]/10 border border-[#C9A84C]/30 rounded-xl p-3 my-3">
-                      <p className="text-[#C9A84C] font-bold text-sm">🎯 Máquina Personalizada com sua Logo</p>
-                      <p className="text-[10px] text-[#888]">Grátis! Sua marca na máquina</p>
+                      <p className="text-[#C9A84C] font-bold text-sm">?? M�quina Personalizada com sua Logo</p>
+                      <p className="text-[10px] text-[#888]">Gr�tis! Sua marca na m�quina</p>
                     </div>
                   )}
                   {isGold && (
                     <div className="bg-gradient-to-r from-orange-500/20 to-yellow-500/10 border border-orange-500/30 rounded-xl p-3 my-3">
-                      <p className="text-orange-400 font-bold text-sm">🎯 Primeiros 10 levam Kit Profissional Grátis!</p>
-                      <p className="text-[10px] text-[#888]">Personalizável com sua marca</p>
+                      <p className="text-orange-400 font-bold text-sm">?? Primeiros 10 levam Kit Profissional Gr�tis!</p>
+                      <p className="text-[10px] text-[#888]">Personaliz�vel com sua marca</p>
                     </div>
                   )}
-                  {plan.trialDays > 0 && <p className="text-[10px] text-[#C9A84C] font-bold">{plan.trialDays} dias grátis</p>}
+                  {plan.trialDays > 0 && <p className="text-[10px] text-[#C9A84C] font-bold">{plan.trialDays} dias gr�tis</p>}
                 </div>
                 <div className="space-y-3 mb-6">
                   {plan.features?.map((f: string, idx: number) => (
@@ -1705,7 +1770,7 @@ function LoginScreen() {\n  const { t } = useLocale();
                         : "bg-[#1A1A1A] border border-[#2A2A2A] text-white hover:bg-[#222]"
                   )}
                 >
-                  {isFree ? 'Começar Grátis' : isEnterprise ? 'Garantir Oferta' : 'Assinar'}
+                  {isFree ? 'Come�ar Gr�tis' : isEnterprise ? 'Garantir Oferta' : 'Assinar'}
                 </button>
               </div>
             );
@@ -1716,7 +1781,7 @@ function LoginScreen() {\n  const { t } = useLocale();
       {/* Footer */}
       <footer className="border-t border-[#2A2A2A] py-6 text-center">
         <p className="text-[10px] text-[#555] uppercase tracking-widest font-bold">
-          Enterprise Edition / 2026 — Desenvolvido por Michael Mariano / 2026
+          Enterprise Edition / 2026 � Desenvolvido por Michael Mariano / 2026
         </p>
       </footer>
     </div>
@@ -1755,6 +1820,13 @@ export default function App() {
   return (
     <AuthProvider>
       <AppContent />
+      <Toaster
+        position="top-right"
+        theme="dark"
+        richColors
+        closeButton
+        toastOptions={{ duration: 4000 }}
+      />
     </AuthProvider>
   );
 }
@@ -1778,7 +1850,7 @@ function WelcomeMachineView({ shopId, onNavigate }: { shopId: string; onNavigate
 
   const handleSubmit = async () => {
     if (!form.full_name || !form.phone || !form.address || !form.city || !form.state || !form.zip_code) {
-      setError('Preencha todos os campos obrigatórios.');
+      setError('Preencha todos os campos obrigat�rios.');
       return;
     }
     setSaving(true);
@@ -1798,9 +1870,9 @@ function WelcomeMachineView({ shopId, onNavigate }: { shopId: string; onNavigate
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         className="max-w-xl mx-auto text-center py-20 px-4">
         <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-6" />
-        <h1 className="text-3xl font-bold text-white mb-3">Tudo pronto! 🎉</h1>
-        <p className="text-[#888] text-lg mb-2">Sua solicitação foi enviada com sucesso.</p>
-        <p className="text-[#888] mb-8">Vamos preparar sua máquina personalizada. Você receberá atualizações por aqui!</p>
+        <h1 className="text-3xl font-bold text-white mb-3">Tudo pronto! ??</h1>
+        <p className="text-[#888] text-lg mb-2">Sua solicita��o foi enviada com sucesso.</p>
+        <p className="text-[#888] mb-8">Vamos preparar sua m�quina personalizada. Voc� receber� atualiza��es por aqui!</p>
         <button onClick={() => onNavigate('dashboard')}
           className="bg-[#C9A84C] text-[#0A0A0A] px-8 py-3 rounded-xl font-bold hover:bg-[#E8C96A] transition-all">
           Ir para o Dashboard
@@ -1818,13 +1890,13 @@ function WelcomeMachineView({ shopId, onNavigate }: { shopId: string; onNavigate
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#C9A84C] to-[#E8C96A] flex items-center justify-center mx-auto">
               <Crown className="w-10 h-10 text-[#0A0A0A]" />
             </div>
-            <h1 className="text-3xl font-bold text-white">Parabéns pelo plano! 🎉</h1>
-            <p className="text-[#888] text-lg">Você ganhou uma <strong className="text-[#C9A84C]">máquina personalizada</strong> com a logo da sua barbearia!</p>
+            <h1 className="text-3xl font-bold text-white">Parab�ns pelo plano! ??</h1>
+            <p className="text-[#888] text-lg">Voc� ganhou uma <strong className="text-[#C9A84C]">m�quina personalizada</strong> com a logo da sua barbearia!</p>
             <div className="bg-gradient-to-r from-[#C9A84C]/10 to-transparent border border-[#C9A84C]/20 rounded-2xl p-6 mt-6">
               <p className="text-white text-sm leading-relaxed">
-                Preencha seus dados de envio abaixo e, se tiver uma logo, envie também. 
-                <strong className="text-[#C9A84C]"> Se não tiver logo, não se preocupe!</strong> 
-                Nossa equipe cria uma <strong className="text-[#C9A84C]">logo profissional gratuitamente</strong> para você.
+                Preencha seus dados de envio abaixo e, se tiver uma logo, envie tamb�m. 
+                <strong className="text-[#C9A84C]"> Se n�o tiver logo, n�o se preocupe!</strong> 
+                Nossa equipe cria uma <strong className="text-[#C9A84C]">logo profissional gratuitamente</strong> para voc�.
               </p>
             </div>
             <button onClick={() => setStep('form')}
@@ -1837,9 +1909,9 @@ function WelcomeMachineView({ shopId, onNavigate }: { shopId: string; onNavigate
         <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-3xl p-8 space-y-6">
           <div className="flex items-center gap-3 mb-2">
             <Package className="w-6 h-6 text-[#C9A84C]" />
-            <h2 className="text-xl font-bold text-white">Dados para Envio da Máquina</h2>
+            <h2 className="text-xl font-bold text-white">Dados para Envio da M�quina</h2>
           </div>
-          <p className="text-[#888] text-sm">Preencha corretamente para receber sua máquina personalizada.</p>
+          <p className="text-[#888] text-sm">Preencha corretamente para receber sua m�quina personalizada.</p>
 
           {error && (
             <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-red-500 text-xs font-bold">{error}</div>
@@ -1862,7 +1934,7 @@ function WelcomeMachineView({ shopId, onNavigate }: { shopId: string; onNavigate
                 className="w-full bg-[#141414] border border-[#2A2A2A] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#C9A84C]" />
             </div>
             <div className="md:col-span-2">
-              <label className="block text-xs text-[#888] font-bold mb-1">Endereço completo *</label>
+              <label className="block text-xs text-[#888] font-bold mb-1">Endere�o completo *</label>
               <input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
                 className="w-full bg-[#141414] border border-[#2A2A2A] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#C9A84C]" />
             </div>
@@ -1894,8 +1966,8 @@ function WelcomeMachineView({ shopId, onNavigate }: { shopId: string; onNavigate
                 </label>
               )}
               <div className="flex-1">
-                <p className="text-sm text-white">Faça upload da sua logo</p>
-                <p className="text-[10px] text-[#888]">PNG, JPG ou SVG. Máx 5MB.</p>
+                <p className="text-sm text-white">Fa�a upload da sua logo</p>
+                <p className="text-[10px] text-[#888]">PNG, JPG ou SVG. M�x 5MB.</p>
               </div>
             </div>
 
@@ -1903,13 +1975,13 @@ function WelcomeMachineView({ shopId, onNavigate }: { shopId: string; onNavigate
               <input type="checkbox" checked={form.needs_logo_design} onChange={e => setForm(f => ({ ...f, needs_logo_design: e.target.checked }))}
                 className="w-4 h-4 accent-[#C9A84C]" />
               <div>
-                <p className="text-sm font-bold text-white">Não tenho logo</p>
-                <p className="text-[10px] text-[#C9A84C]">Nossa equipe cria uma logo profissional GRÁTIS para você!</p>
+                <p className="text-sm font-bold text-white">N�o tenho logo</p>
+                <p className="text-[10px] text-[#C9A84C]">Nossa equipe cria uma logo profissional GR�TIS para voc�!</p>
               </div>
             </label>
 
             <div className="md:col-span-2">
-              <label className="block text-xs text-[#888] font-bold mb-1">Observações (opcional)</label>
+              <label className="block text-xs text-[#888] font-bold mb-1">Observa��es (opcional)</label>
               <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={3}
                 className="w-full bg-[#141414] border border-[#2A2A2A] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#C9A84C] resize-none" />
             </div>
@@ -1923,7 +1995,7 @@ function WelcomeMachineView({ shopId, onNavigate }: { shopId: string; onNavigate
 
           <button onClick={() => onNavigate('dashboard')}
             className="w-full py-3 text-[#888] text-sm hover:text-white transition-colors">
-            Pular por enquanto (faço depois)
+            Pular por enquanto (fa�o depois)
           </button>
         </div>
       )}
@@ -2038,21 +2110,21 @@ function DashboardView({ onNavigate, shopId }: { onNavigate: (v: View) => void, 
     >
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-2xl font-bold text-[#C9A84C]">Visão Geral</h1>
+          <h1 className="text-2xl font-bold text-[#C9A84C]">Vis�o Geral</h1>
           <p className="text-[#888] text-sm">Bem-vindo ao KERNEL BARBER SHOPPER, seu painel do dia.</p>
         </div>
         <button className="bg-[#C9A84C] text-[#0A0A0A] px-5 py-2.5 rounded-xl font-semibold text-sm hover:scale-[1.02] active:scale-95 transition-all">
-          Baixar Relatório
+          Baixar Relat�rio
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-[#1A1A1A] border border-[#2A2A2A] p-6 rounded-2xl">
-          <p className="text-[#888] text-xs font-medium uppercase tracking-wider mb-2">Saldo Disponível</p>
-          <div className="text-2xl font-bold text-[#E8C96A]">R$ {balance.toFixed(2)}</div>
+          <p className="text-[#888] text-xs font-medium uppercase tracking-wider mb-2">Saldo Dispon�vel</p>
+          <div className="text-2xl font-bold text-[#E8C96A]">${balance.toFixed(2)}</div>
           <button onClick={() => setShowSaque(true)} disabled={balance <= 0}
             className="mt-3 w-full text-[10px] font-bold py-2 rounded-xl bg-[#C9A84C]/10 border border-[#C9A84C]/30 text-[#C9A84C] hover:bg-[#C9A84C]/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed">
-            {balance > 0 ? 'Solicitar Saque' : 'Sem saldo disponível'}
+            {balance > 0 ? 'Solicitar Saque' : 'Sem saldo dispon�vel'}
           </button>
         </div>
         <div className="bg-[#1A1A1A] border border-[#2A2A2A] p-6 rounded-2xl">
@@ -2063,17 +2135,17 @@ function DashboardView({ onNavigate, shopId }: { onNavigate: (v: View) => void, 
         <div className="bg-[#1A1A1A] border border-[#2A2A2A] p-6 rounded-2xl">
           <p className="text-[#888] text-xs font-medium uppercase tracking-wider mb-2">Clientes (30d)</p>
           <div className="text-2xl font-bold text-[#E8C96A]">{metrics.newClients}</div>
-          <p className="text-[10px] mt-1 font-medium text-[#888]">Clientes únicos</p>
+          <p className="text-[10px] mt-1 font-medium text-[#888]">Clientes �nicos</p>
         </div>
         <div className="bg-[#1A1A1A] border border-[#2A2A2A] p-6 rounded-2xl">
-          <p className="text-[#888] text-xs font-medium uppercase tracking-wider mb-2">Avaliação</p>
-          <div className="text-2xl font-bold text-[#E8C96A]">{metrics.avgRating > 0 ? `${metrics.avgRating} ★` : 'N/A'}</div>
-          <p className="text-[10px] mt-1 font-medium text-[#888]">{metrics.totalReviews} avaliações</p>
+          <p className="text-[#888] text-xs font-medium uppercase tracking-wider mb-2">Avalia��o</p>
+          <div className="text-2xl font-bold text-[#E8C96A]">{metrics.avgRating > 0 ? `${metrics.avgRating} ?` : 'N/A'}</div>
+          <p className="text-[10px] mt-1 font-medium text-[#888]">{metrics.totalReviews} avalia��es</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card title="Próximos Agendamentos" action="Ver agenda" onAction={() => onNavigate('agenda')}>
+        <Card title="Pr�ximos Agendamentos" action="Ver agenda" onAction={() => onNavigate('agenda')}>
           {loading ? (
             <div className="p-4 text-center text-[#888]">
               <Loader2 className="w-5 h-5 animate-spin inline" />
@@ -2120,7 +2192,7 @@ function DashboardView({ onNavigate, shopId }: { onNavigate: (v: View) => void, 
             className="w-full mt-6 bg-[#C9A84C]/10 text-[#C9A84C] border border-[#C9A84C]/20 py-3 rounded-xl text-sm font-medium hover:bg-[#C9A84C]/20 transition-all flex items-center justify-center gap-2"
           >
             <Bot className="w-4 h-4" />
-            Analisar Reposição com IA
+            Analisar Reposi��o com IA
           </button>
         </Card>
       </div>
@@ -2168,7 +2240,7 @@ function DashboardView({ onNavigate, shopId }: { onNavigate: (v: View) => void, 
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setShowSaque(false)}>
           <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl w-full max-w-md p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
             <h2 className="text-lg font-bold text-white mb-2">Solicitar Saque</h2>
-            <p className="text-sm text-[#888] mb-6">Seu saldo disponível: <span className="text-[#C9A84C] font-bold">R$ {balance.toFixed(2)}</span></p>
+            <p className="text-sm text-[#888] mb-6">Seu saldo dispon�vel: <span className="text-[#C9A84C] font-bold">${balance.toFixed(2)}</span></p>
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-[#888] uppercase tracking-widest mb-1">Valor do Saque</label>
@@ -2178,7 +2250,7 @@ function DashboardView({ onNavigate, shopId }: { onNavigate: (v: View) => void, 
               <div>
                 <label className="block text-xs font-bold text-[#888] uppercase tracking-widest mb-1">Chave PIX</label>
                 <input type="text" value={saquePix} onChange={e => setSaquePix(e.target.value)}
-                  placeholder="CPF, email, telefone ou chave aleatória" className="w-full bg-[#141414] border border-[#2A2A2A] rounded-xl px-4 py-2.5 text-sm text-white placeholder-[#555] focus:outline-none focus:border-[#C9A84C]" />
+                  placeholder="CPF, email, telefone ou chave aleat�ria" className="w-full bg-[#141414] border border-[#2A2A2A] rounded-xl px-4 py-2.5 text-sm text-white placeholder-[#555] focus:outline-none focus:border-[#C9A84C]" />
               </div>
             </div>
             <div className="flex gap-3 mt-6">
@@ -2186,19 +2258,19 @@ function DashboardView({ onNavigate, shopId }: { onNavigate: (v: View) => void, 
                 className="flex-1 px-4 py-2.5 text-sm font-bold text-[#888] bg-[#141414] rounded-xl hover:bg-[#2A2A2A] transition-all">Cancelar</button>
               <button onClick={async () => {
                 const valor = Number(saqueValor);
-                if (!valor || valor <= 0 || valor > balance) { alert('Valor inválido'); return; }
-                if (!saquePix.trim()) { alert('Informe a chave PIX'); return; }
+                if (!valor || valor <= 0 || valor > balance) { toast.error('Valor inv�lido'); return; }
+                if (!saquePix.trim()) { toast.error('Informe a chave PIX'); return; }
                 setSaqueLoading(true);
                 try {
                   await requestWithdrawal(shopId, valor, saquePix.trim());
-                  alert('Solicitação de saque enviada! O admin irá analisar.');
+                  toast.error('Solicita��o de saque enviada! O admin ir� analisar.');
                   setShowSaque(false);
                   setSaqueValor('');
                   setSaquePix('');
                   const { data } = await supabase.from('shops').select('balance').eq('id', shopId).single();
                   setBalance(Number(data?.balance || 0));
                 } catch (e: any) {
-                  alert('Erro: ' + (e?.message || 'desconhecido'));
+                  toast.error('Erro: ' + (e?.message || 'desconhecido'));
                 } finally { setSaqueLoading(false); }
               }} disabled={saqueLoading || !saqueValor || !saquePix}
                 className="flex-1 px-4 py-2.5 text-sm font-bold bg-[#C9A84C] text-[#0A0A0A] rounded-xl hover:bg-[#D4B84C] transition-all disabled:opacity-50 flex items-center justify-center gap-2">
@@ -2247,12 +2319,12 @@ function AgendaView({ onNavigate, shopId, maxAppointments }: { onNavigate: (v: V
   const getWhatsAppLink = (appointment: any) => {
     const phone = appointment.user_phone || '';
     const message = encodeURIComponent(
-      `Olá ${appointment.user_name}! Seu agendamento na KERNEL BARBER SHOPPER está confirmado:\n` +
+      `Ol� ${appointment.user_name}! Seu agendamento na KERNEL BARBER SHOPPER est� confirmado:\n` +
       `Data: ${fmtDate(appointment.date)}\n` +
-      `Horário: ${fmtTime(appointment.date)}\n` +
-      `Serviço: ${appointment.service_name}\n` +
+      `Hor�rio: ${fmtTime(appointment.date)}\n` +
+      `Servi�o: ${appointment.service_name}\n` +
       `Profissional: ${barberMap[appointment.professional_id] || appointment.professional_id}\n` +
-      `Aguardamos você!`
+      `Aguardamos voc�!`
     );
     return `https://wa.me/${phone}?text=${message}`;
   };
@@ -2307,12 +2379,12 @@ function AgendaView({ onNavigate, shopId, maxAppointments }: { onNavigate: (v: V
 
       <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl overflow-hidden">
         <div className="grid grid-cols-6 p-4 border-b border-[#2A2A2A] text-[10px] uppercase font-bold tracking-widest text-[#C9A84C]">
-          <div className="col-span-1">Horário</div>
+          <div className="col-span-1">Hor�rio</div>
           <div className="col-span-1">Cliente</div>
-          <div className="col-span-1">Serviço</div>
+          <div className="col-span-1">Servi�o</div>
           <div className="col-span-1">Barbeiro</div>
           <div className="col-span-1">Status</div>
-          <div className="col-span-1 text-right">Ação</div>
+          <div className="col-span-1 text-right">A��o</div>
         </div>
         <div className="divide-y divide-[#2A2A2A]">
           {loading ? (
@@ -2423,7 +2495,7 @@ function BarbersView({ onNavigate, shopId, maxBarbers }: { onNavigate: (v: View)
   const copyStoreLink = (slug: string, name: string) => {
     const url = `${window.location.origin}/?loja=${slug}`;
     navigator.clipboard.writeText(url);
-    alert(`Link da loja de ${name} copiado!`);
+    toast.error(`Link da loja de ${name} copiado!`);
   };
 
   const handleAddBarber = async () => {
@@ -2446,7 +2518,7 @@ function BarbersView({ onNavigate, shopId, maxBarbers }: { onNavigate: (v: View)
       setShowAddModal(false);
       setNewBarber({ name: '', slug: '', bio: '', instagram: '', whatsapp: '', image: '', styles: [] });
     } catch (error: any) {
-      alert('Erro ao adicionar: ' + (error?.message || ''));
+      toast.error('Erro ao adicionar: ' + (error?.message || ''));
     } finally {
       setAdding(false);
     }
@@ -2482,7 +2554,7 @@ function BarbersView({ onNavigate, shopId, maxBarbers }: { onNavigate: (v: View)
       });
       setSelectedBarber(null);
     } catch (error: any) {
-      alert('Erro ao salvar: ' + (error?.message || ''));
+      toast.error('Erro ao salvar: ' + (error?.message || ''));
     } finally {
       setSaving(false);
     }
@@ -2493,7 +2565,7 @@ function BarbersView({ onNavigate, shopId, maxBarbers }: { onNavigate: (v: View)
     try {
       await deleteBarber(barber.id);
     } catch (error: any) {
-      alert('Erro ao excluir: ' + (error?.message || ''));
+      toast.error('Erro ao excluir: ' + (error?.message || ''));
     }
   };
 
@@ -2507,7 +2579,7 @@ function BarbersView({ onNavigate, shopId, maxBarbers }: { onNavigate: (v: View)
         <h1 className="text-2xl font-bold text-[#C9A84C]">Equipe de Barbeiros</h1>
         {maxBarbers && maxBarbers < Infinity && barbers.length >= maxBarbers ? (
           <div className="bg-[#C9A84C]/10 border border-[#C9A84C]/20 text-[#C9A84C] px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2">
-            <Crown className="w-4 h-4" /> Faça upgrade para + Barbeiros
+            <Crown className="w-4 h-4" /> Fa�a upgrade para + Barbeiros
           </div>
         ) : (
         <button onClick={() => setShowAddModal(true)}
@@ -2526,7 +2598,7 @@ function BarbersView({ onNavigate, shopId, maxBarbers }: { onNavigate: (v: View)
           <Users className="w-16 h-16 text-[#333] mx-auto mb-4" />
           <p className="text-[#888] text-sm mb-4">Nenhum barbeiro cadastrado ainda.</p>
           {maxBarbers && maxBarbers < Infinity && barbers.length >= maxBarbers ? (
-            <div className="text-[#C9A84C] text-xs font-bold">Limite do plano Free atingido. Faça upgrade para cadastrar Barbeiros.</div>
+            <div className="text-[#C9A84C] text-xs font-bold">Limite do plano Free atingido. Fa�a upgrade para cadastrar Barbeiros.</div>
           ) : (
           <button onClick={() => setShowAddModal(true)}
             className="bg-[#C9A84C] text-[#0A0A0A] px-6 py-3 rounded-xl font-bold text-sm hover:bg-[#E8C96A] transition-all">
@@ -2574,7 +2646,7 @@ function BarbersView({ onNavigate, shopId, maxBarbers }: { onNavigate: (v: View)
                 <p className="text-[9px] text-[#888] uppercase font-bold tracking-wider">Cortes</p>
               </div>
               <div>
-                <p className="text-sm font-bold text-[#C9A84C]">R$ {stats.rev.toFixed(0)}</p>
+                <p className="text-sm font-bold text-[#C9A84C]">${stats.rev.toFixed(0)}</p>
                 <p className="text-[9px] text-[#888] uppercase font-bold tracking-wider">Faturado</p>
               </div>
               <div>
@@ -2681,7 +2753,7 @@ function BarbersView({ onNavigate, shopId, maxBarbers }: { onNavigate: (v: View)
             className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-3xl p-8 max-w-md w-full shadow-2xl">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-[#C9A84C]">Editar {selectedBarber.name}</h2>
-              <button onClick={() => setSelectedBarber(null)} className="text-[#888] hover:text-white">✕</button>
+              <button onClick={() => setSelectedBarber(null)} className="text-[#888] hover:text-white">?</button>
             </div>
             <div className="space-y-4">
               <div>
@@ -2742,7 +2814,7 @@ function BarbersView({ onNavigate, shopId, maxBarbers }: { onNavigate: (v: View)
                       <div key={i} className="relative group">
                         <img src={s} className="w-16 h-16 object-cover rounded-lg border border-[#2A2A2A]" />
                         <button onClick={() => setEditBarber({...editBarber, styles: editBarber.styles.filter((_, j) => j !== i)})}
-                          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-white text-[10px] font-bold flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">✕</button>
+                          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-white text-[10px] font-bold flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">?</button>
                       </div>
                     ))}
                   </div>
@@ -2796,7 +2868,7 @@ function StockView({ onNavigate, shopId, maxProducts }: { onNavigate: (v: View) 
     if (!newItem.name || !newItem.qty) return;
     setAddError('');
     if (stock.length >= maxProducts) {
-      setAddError(`Limite de ${maxProducts} produtos atingido. Faça upgrade do plano para cadastrar mais.`);
+      setAddError(`Limite de ${maxProducts} produtos atingido. Fa�a upgrade do plano para cadastrar mais.`);
       setAdding(false);
       return;
     }
@@ -2855,7 +2927,7 @@ function StockView({ onNavigate, shopId, maxProducts }: { onNavigate: (v: View) 
       setSelectedItem(null);
     } catch (error: any) {
       console.error('Error updating item:', error);
-      alert('Erro ao salvar: ' + (error?.message || 'desconhecido'));
+      toast.error('Erro ao salvar: ' + (error?.message || 'desconhecido'));
     } finally {
       setSaving(false);
     }
@@ -2909,7 +2981,7 @@ function StockView({ onNavigate, shopId, maxProducts }: { onNavigate: (v: View) 
           <div className="col-span-2">Produto</div>
           <div>Categoria</div>
           <div className="text-center">Quantidade</div>
-          <div className="text-right">Preço</div>
+          <div className="text-right">Pre�o</div>
         </div>
         <div className="divide-y divide-[#2A2A2A]">
           {loading ? (
@@ -2940,7 +3012,7 @@ function StockView({ onNavigate, shopId, maxProducts }: { onNavigate: (v: View) 
                   </span>
                 </div>
                 <div className="text-right text-[#C9A84C] font-bold">
-                  R$ {Number(item.price || 0).toFixed(2)}
+                  ${Number(item.price || 0).toFixed(2)}
                 </div>
              </div>
             ))
@@ -2981,7 +3053,7 @@ function StockView({ onNavigate, shopId, maxProducts }: { onNavigate: (v: View) 
                   <option value="Finalizador">Finalizador</option>
                   <option value="Barba">Barba</option>
                   <option value="Cabelo">Cabelo</option>
-                  <option value="Descartável">Descartável</option>
+                  <option value="Descart�vel">Descart�vel</option>
                   <option value="Geral">Geral</option>
                 </select>
               </div>
@@ -2998,7 +3070,7 @@ function StockView({ onNavigate, shopId, maxProducts }: { onNavigate: (v: View) 
                   />
                 </div>
                 <div>
-                  <label className="text-[#888] text-xs font-bold uppercase tracking-wider mb-2 block">Preço (R$)</label>
+                  <label className="text-[#888] text-xs font-bold uppercase tracking-wider mb-2 block">Preço ($)</label>
                   <input
                     type="number"
                     placeholder="0.00"
@@ -3062,7 +3134,7 @@ function StockView({ onNavigate, shopId, maxProducts }: { onNavigate: (v: View) 
                 onClick={() => setSelectedItem(null)}
                 className="text-[#888] hover:text-white transition-all"
               >
-                ✕
+                ?
               </button>
             </div>
 
@@ -3088,7 +3160,7 @@ function StockView({ onNavigate, shopId, maxProducts }: { onNavigate: (v: View) 
                   <option value="Finalizador">Finalizador</option>
                   <option value="Barba">Barba</option>
                   <option value="Cabelo">Cabelo</option>
-                  <option value="Descartável">Descartável</option>
+                  <option value="Descart�vel">Descart�vel</option>
                   <option value="Geral">Geral</option>
                 </select>
               </div>
@@ -3105,7 +3177,7 @@ function StockView({ onNavigate, shopId, maxProducts }: { onNavigate: (v: View) 
                   />
                 </div>
                 <div>
-                  <label className="text-[#888] text-xs font-bold uppercase tracking-wider mb-2 block">Preço (R$)</label>
+                  <label className="text-[#888] text-xs font-bold uppercase tracking-wider mb-2 block">Preço ($)</label>
                   <input
                     type="number"
                     step="0.01"
@@ -3264,12 +3336,12 @@ function FinanceiroView({ shopId }: { shopId: string }) {
               <p className="text-[10px] mt-1 font-medium text-red-500">Estimado (30%)</p>
             </div>
             <div className="bg-[#1A1A1A] border border-[#2A2A2A] p-6 rounded-2xl">
-              <p className="text-[#888] text-xs font-medium uppercase tracking-wider mb-2">Lucro Líquido</p>
+              <p className="text-[#888] text-xs font-medium uppercase tracking-wider mb-2">Lucro L�quido</p>
               <div className="text-2xl font-bold text-[#E8C96A]">{formatCurrency(profit)}</div>
               <p className="text-[10px] mt-1 font-medium text-green-500">{revenue > 0 ? ((profit / revenue) * 100).toFixed(1) : 0}% margem</p>
             </div>
             <div className="bg-[#1A1A1A] border border-[#2A2A2A] p-6 rounded-2xl">
-              <p className="text-[#888] text-xs font-medium uppercase tracking-wider mb-2">Ticket Médio</p>
+              <p className="text-[#888] text-xs font-medium uppercase tracking-wider mb-2">Ticket M�dio</p>
               <div className="text-2xl font-bold text-[#E8C96A]">{formatCurrency(ticketMedio)}</div>
               <p className="text-[10px] mt-1 font-medium text-[#888]">Por agendamento</p>
             </div>
@@ -3277,7 +3349,7 @@ function FinanceiroView({ shopId }: { shopId: string }) {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-6">
-              <h3 className="text-sm font-bold text-[#888] uppercase tracking-widest mb-4">Receita por Serviço</h3>
+              <h3 className="text-sm font-bold text-[#888] uppercase tracking-widest mb-4">Receita por Servi�o</h3>
               <div className="space-y-4">
                 {revenueByService.length === 0 ? (
                   <p className="text-[#888] text-sm text-center py-4">Nenhum dado ainda</p>
@@ -3319,7 +3391,7 @@ function FinanceiroView({ shopId }: { shopId: string }) {
                   <span className="text-red-400 font-bold">{formatCurrency(expenses)}</span>
                 </div>
                 <div className="border-t border-[#2A2A2A] pt-3 flex justify-between text-sm">
-                  <span className="text-[#eee] font-bold">Lucro Líquido</span>
+                  <span className="text-[#eee] font-bold">Lucro L�quido</span>
                   <span className="text-[#C9A84C] font-bold">{formatCurrency(profit)}</span>
                 </div>
               </div>
@@ -3333,10 +3405,10 @@ function FinanceiroView({ shopId }: { shopId: string }) {
 
 function IAAssistantView({ messages, input, setInput, sendMessage, isTyping, chatEndRef }: any) {
   const quickPrompts = [
-    'Quais horários livres hoje?',
-    'Relatório de estoque crítico',
-    'Ranking de barbeiros do mês',
-    'Previsão de receita semanal',
+    'Quais hor�rios livres hoje?',
+    'Relat�rio de estoque cr�tico',
+    'Ranking de barbeiros do m�s',
+    'Previs�o de receita semanal',
   ];
 
   return (
@@ -3347,7 +3419,7 @@ function IAAssistantView({ messages, input, setInput, sendMessage, isTyping, cha
     >
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-[#C9A84C]">IA Assistente</h1>
-        <p className="text-[#888] text-sm">Consultor em agendamentos, estoque e estratégia de negócio.</p>
+        <p className="text-[#888] text-sm">Consultor em agendamentos, estoque e estrat�gia de neg�cio.</p>
       </div>
 
       <div className="flex flex-wrap gap-2 mb-6">
@@ -3390,7 +3462,7 @@ function IAAssistantView({ messages, input, setInput, sendMessage, isTyping, cha
             <div className="w-8 h-8 rounded-full bg-[#C9A84C] flex items-center justify-center">
               <Loader2 className="w-4 h-4 text-[#0A0A0A] animate-spin" />
             </div>
-            <p className="text-xs text-[#888] font-bold tracking-widest uppercase">IA está processando...</p>
+            <p className="text-xs text-[#888] font-bold tracking-widest uppercase">IA est� processando...</p>
           </div>
         )}
         <div ref={chatEndRef} />
@@ -3422,405 +3494,6 @@ function IAAssistantView({ messages, input, setInput, sendMessage, isTyping, cha
   );
 }
 
-function PricingView() {
-  const { t } = useLocale();
-  const [plans, setPlans] = React.useState<any[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const { user } = useAuth();
-  const [pixModal, setPixModal] = React.useState<{open: boolean, brCode?: string, brCodeBase64?: string, expiresAt?: string, planName?: string, bankSlipUrl?: string, barCode?: string, billingType?: string}>({open: false});
-  const [checking, setChecking] = React.useState(false);
-  const [cpfModal, setCpfModal] = React.useState<{open: boolean, plan?: any, isRecurring?: boolean, cycle?: string}>({open: false});
-  const [cpfInput, setCpfInput] = React.useState('');
-
-  React.useEffect(() => {
-    const unsub = subscribeToPlans<any>((data) => {
-      setPlans(data.filter((p: any) => p.isActive !== false));
-      setLoading(false);
-    });
-    return () => unsub();
-  }, []);
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-  };
-
-  const processCheckout = async (plan: any, cpfCnpj?: string) => {
-    const isRecurring = plan.price > 0;
-    const endpoint = isRecurring ? '/api/create-subscription' : '/api/create-checkout';
-    const bodyPayload: any = {
-      planId: plan.id,
-      planName: plan.name,
-      amount: Math.round(plan.price * 100),
-      email: user!.email,
-    };
-    if (isRecurring) {
-      bodyPayload.cycle = plan.interval === 'yearly' ? 'YEARLY' : 'MONTHLY';
-    }
-    if (cpfCnpj) {
-      bodyPayload.cpfCnpj = cpfCnpj;
-    }
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(bodyPayload),
-    });
-    const responseText = await response.text();
-    let data;
-    try {
-      data = JSON.parse(responseText);
-    } catch {
-      alert('Erro no servidor: resposta inválida. ' + responseText.substring(0, 100));
-      return null;
-    }
-    return data;
-  };
-
-  const handleSelectPlan = async (plan: any) => {
-    if (!user) {
-      alert('Faça login para assinar um plano!');
-      return;
-    }
-    
-    try {
-      setChecking(true);
-
-      const isFree = Number(plan.price) === 0;
-      
-      if (isFree) {
-        const { data: shops } = await supabase
-          .from('shops')
-          .select('id')
-          .eq('owner_id', user.id)
-          .limit(1);
-        const shop = shops?.[0];
-        if (shop) {
-          await supabase.from('shops').update({ plan: 'free', updated_at: new Date().toISOString() }).eq('id', shop.id);
-        }
-        alert('Plano Free ativado com sucesso!');
-        window.location.hash = '';
-        window.location.reload();
-        return;
-      }
-
-      const data = await processCheckout(plan);
-      if (!data) return;
-      
-      if (data.error === 'CPF_CNPJ_REQUIRED') {
-        setCpfModal({open: true, plan, isRecurring: plan.price > 0, cycle: plan.interval === 'yearly' ? 'YEARLY' : 'MONTHLY'});
-        return;
-      }
-      
-      if (data.success && (data.brCode || data.bankSlipUrl)) {
-        setPixModal({
-          open: true,
-          brCode: data.brCode,
-          brCodeBase64: data.brCodeBase64,
-          expiresAt: data.expiresAt || data.nextDueDate,
-          planName: plan.name,
-          bankSlipUrl: data.bankSlipUrl,
-          barCode: data.barCode,
-          billingType: data.billingType
-        });
-      } else {
-        alert('Erro: ' + (data.message || data.error || JSON.stringify(data).substring(0, 200) || 'Erro desconhecido'));
-      }
-    } catch (error: any) {
-      alert('Erro ao processar pagamento: ' + error.message);
-    } finally {
-      setChecking(false);
-    }
-  };
-
-  const handleCpfSubmit = async () => {
-    if (!cpfInput.trim() || !cpfModal.plan) return;
-    const cpfLimpo = cpfInput.trim().replace(/\D/g, '');
-    if (cpfLimpo.length < 11) {
-      alert('CPF/CNPJ inválido. Digite apenas números.');
-      return;
-    }
-    setCpfModal({open: false});
-    setChecking(true);
-    try {
-      const data = await processCheckout(cpfModal.plan, cpfLimpo);
-      if (!data) return;
-      if (data.success && (data.brCode || data.bankSlipUrl)) {
-        setPixModal({
-          open: true,
-          brCode: data.brCode,
-          brCodeBase64: data.brCodeBase64,
-          expiresAt: data.expiresAt || data.nextDueDate,
-          planName: cpfModal.plan.name,
-          bankSlipUrl: data.bankSlipUrl,
-          barCode: data.barCode,
-          billingType: data.billingType
-        });
-      } else {
-        alert('Erro: ' + (data.message || data.error || JSON.stringify(data).substring(0, 200) || 'Erro desconhecido'));
-      }
-    } catch (error: any) {
-      alert('Erro ao processar pagamento: ' + error.message);
-    } finally {
-      setChecking(false);
-      setCpfInput('');
-    }
-  };
-
-  return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="max-w-6xl mx-auto space-y-8 py-8"
-    >
-      <div className="text-center mb-12">
-<h1 className="text-4xl font-display font-bold text-white mb-4">{t('Escolha o melhor para seu salão')}</h1>
-<p className="text-[#888] text-lg max-w-2xl mx-auto">{t('Gerencie sua barbearia com inteligência artificial e ferramentas Barbeiros. Comece grátis!')}</p>
-      </div>
-
-      {loading ? (
-        <div className="text-center py-12">
-          <Loader2 className="w-8 h-8 text-[#C9A84C] animate-spin inline" />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
-          {plans.map((plan, i) => {
-            const isFree = plan.price === 0;
-            const isEnterprise = plan.price >= 129 || plan.name.toLowerCase().includes('enterprise');
-            const isGold = plan.id === 'pro' || (Number(plan.price) >= 70 && Number(plan.price) < 129);
-            const isPopular = isGold;
-            
-            return (
-              <div 
-                key={plan.id || i} 
-                className={cn(
-                  "relative bg-[#141414] border rounded-2xl p-6 transition-all hover:scale-[1.02]",
-                  isEnterprise ? "border-[#C9A84C] shadow-lg shadow-[#C9A84C]/30 ring-2 ring-[#C9A84C]/50" :
-                  isPopular ? "border-[#C9A84C] shadow-lg shadow-[#C9A84C]/20" : "border-[#2A2A2A] hover:border-[#3A3A3A]",
-                  isFree && "border-green-500/50"
-                )}
-              >
-                {isEnterprise && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#C9A84C] to-[#E8C96A] text-[#0A0A0A] text-[9px] font-bold px-4 py-1 rounded-full uppercase tracking-widest shadow-lg whitespace-nowrap">
-                    🏆 Kit Profissional Grátis
-                  </div>
-                )}
-                {isPopular && !isEnterprise && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#C9A84C] text-[#0A0A0A] text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
-                    Mais Popular
-                  </div>
-                )}
-                {isFree && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-500 text-[#0A0A0A] text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
-                    Grátis
-                  </div>
-                )}
-
-                <div className="text-center mb-6">
-                  {isEnterprise && (
-                    <p className="text-[8px] text-[#C9A84C] font-bold uppercase tracking-[3px] mb-1">RECOMENDADO</p>
-                  )}
-                  <h3 className="text-xl font-bold text-white mb-2">{plan.name}</h3>
-                  <div className="mb-2">
-                    {isFree ? (
-                      <span className="text-4xl font-bold text-green-400">Grátis</span>
-                    ) : (
-                      <>
-                        <span className="text-4xl font-bold text-[#C9A84C]">
-                          {formatCurrency(plan.price).replace(',', ',')}
-                        </span>
-                        <span className="text-[#888] text-sm ml-1">
-                          /{plan.interval === 'yearly' ? 'ano' : 'mês'}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  {isEnterprise && (
-                    <div className="bg-gradient-to-r from-[#C9A84C]/20 to-[#E8C96A]/10 border border-[#C9A84C]/30 rounded-xl p-3 my-3">
-                      <p className="text-[#C9A84C] font-bold text-sm">🎯 Máquina Personalizada com sua Logo</p>
-                      <p className="text-[10px] text-[#888]">Grátis! Sua marca na máquina</p>
-                    </div>
-                  )}
-                  {isGold && (
-                    <div className="bg-gradient-to-r from-orange-500/20 to-yellow-500/10 border border-orange-500/30 rounded-xl p-3 my-3">
-                      <p className="text-orange-400 font-bold text-sm">🎯 Primeiros 10 levam Kit Profissional Grátis!</p>
-                      <p className="text-[10px] text-[#888]">Personalizável com sua marca</p>
-                    </div>
-                  )}
-                  {plan.trialDays > 0 && (
-                    <p className="text-[10px] text-[#C9A84C] font-bold">
-                      {plan.trialDays} dias grátis
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-3 mb-6">
-                  {plan.features?.map((feature: string, idx: number) => (
-                    <div key={idx} className="flex items-center gap-2 text-sm text-[#eee]">
-                      <CheckCircle2 className={cn("w-4 h-4 shrink-0", isEnterprise ? "text-[#C9A84C]" : "text-green-500")} />
-                      {feature}
-                    </div>
-                  ))}
-                </div>
-
-                <button
-                  onClick={() => handleSelectPlan(plan)}
-                  disabled={checking}
-                  className={cn(
-                    "w-full py-3 rounded-xl font-bold text-sm transition-all",
-                    isEnterprise
-                      ? "bg-gradient-to-r from-[#C9A84C] to-[#E8C96A] text-[#0A0A0A] hover:brightness-110 shadow-lg shadow-[#C9A84C]/30"
-                      : isFree 
-                        ? "bg-green-500/10 border border-green-500/30 text-green-500 hover:bg-green-500/20"
-                        : isPopular
-                          ? "bg-[#C9A84C] text-[#0A0A0A] hover:bg-[#E8C96A] shadow-lg shadow-[#C9A84C]/20"
-                          : "bg-[#1A1A1A] border border-[#2A2A2A] text-white hover:bg-[#222]",
-                    checking && "opacity-50 cursor-not-allowed"
-                  )}
-                >
-                  {checking ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Processando...
-                    </span>
-                  ) : isFree ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Gift className="w-4 h-4" />
-                      Começar Grátis
-                    </span>
-                  ) : isEnterprise ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Zap className="w-4 h-4" />
-                      Garantir Kit Profissional Grátis
-                    </span>
-                  ) : (
-                    <span className="flex items-center justify-center gap-2">
-                      <Zap className="w-4 h-4" />
-                      Assinar Agora
-                    </span>
-                  )}
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      <div className="mt-12 bg-gradient-to-br from-[#141414] to-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-8 text-center">
-        <h3 className="text-xl font-bold text-white mb-2">Quer uma máquina personalizada?</h3>
-        <p className="text-[#C9A84C] font-bold text-sm mb-6">No Enterprise PRO você ganha uma máquina com sua logo! No Gold, os primeiros 10 também levam!</p>
-        <a href="https://wa.me/5562920001684" target="_blank" rel="noopener noreferrer"
-          className="inline-block bg-gradient-to-r from-[#C9A84C] to-[#E8C96A] text-[#0A0A0A] px-8 py-3 rounded-xl font-bold text-sm hover:brightness-110 transition-all shadow-lg shadow-[#C9A84C]/20">
-          Fale com Vendas
-        </a>
-        <p className="text-[10px] text-[#555] mt-8 uppercase tracking-widest font-bold">
-          Enterprise Edition / 2026 — Desenvolvido por Michael Mariano / 2026
-        </p>
-      </div>
-
-      {pixModal.open && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50" onClick={() => setPixModal({open: false})}>
-          <div className="bg-[#141414] border border-[#2A2A2A] rounded-2xl p-8 max-w-md w-full mx-4" onClick={e => e.stopPropagation()}>
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-bold text-white mb-2">
-                {pixModal.billingType === 'PIX' ? 'Pagamento PIX' : 'Pagamento Boleto'}
-              </h3>
-              <p className="text-[#888] text-sm">Plano {pixModal.planName}</p>
-            </div>
-            <div className="flex flex-col items-center gap-4">
-              {pixModal.billingType === 'PIX' ? (
-                <>
-                  {pixModal.brCodeBase64 && (
-                    <img src={pixModal.brCodeBase64} alt="QR Code PIX" className="w-56 h-56 bg-white p-4 rounded-xl" />
-                  )}
-                  <p className="text-[#eee] text-sm text-center">Escaneie o QR Code acima com seu banco</p>
-                  {pixModal.brCode && (
-                    <div className="w-full">
-                      <p className="text-[10px] text-[#888] text-center mb-2">Ou copie o código PIX:</p>
-                      <div className="w-full bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg p-3 flex items-center gap-2">
-                        <code className="text-[#C9A84C] text-[10px] break-all flex-1">{pixModal.brCode}</code>
-                        <button
-                          onClick={() => navigator.clipboard.writeText(pixModal.brCode || '')}
-                          className="bg-[#C9A84C] text-[#0A0A0A] px-3 py-1 rounded-lg text-[10px] font-bold shrink-0 hover:bg-[#E8C96A]"
-                        >
-                          Copiar
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  {pixModal.expiresAt && (
-                    <p className="text-[10px] text-[#555]">Expira em 1 hora</p>
-                  )}
-                </>
-              ) : (
-                <>
-                  <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center">
-                    <FileText className="w-8 h-8 text-blue-500" />
-                  </div>
-                  <p className="text-[#eee] text-sm text-center">
-                    Seu boleto foi gerado. Clique no botão abaixo para visualizar e pagar.
-                  </p>
-                  {pixModal.barCode && (
-                    <div className="w-full">
-                      <p className="text-[10px] text-[#888] text-center mb-2">Linha digitável:</p>
-                      <div className="w-full bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg p-3">
-                        <code className="text-[#C9A84C] text-[10px] break-all">{pixModal.barCode}</code>
-                      </div>
-                    </div>
-                  )}
-                  {pixModal.bankSlipUrl && (
-                    <a
-                      href={pixModal.bankSlipUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full bg-[#C9A84C] text-[#0A0A0A] py-3 rounded-xl font-bold text-sm text-center hover:bg-[#E8C96A] transition-all"
-                    >
-                      Visualizar Boleto
-                    </a>
-                  )}
-                </>
-              )}
-              <div className="mt-4 pt-4 border-t border-[#2A2A2A] w-full">
-                <p className="text-[10px] text-[#888] text-center">
-                  Após o pagamento, seu plano será ativado automaticamente.
-                </p>
-              </div>
-              <button
-                onClick={() => setPixModal({open: false})}
-                className="text-[#888] text-sm hover:text-white transition-all mt-2"
-              >
-                Fechar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {cpfModal.open && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50" onClick={() => setCpfModal({open: false})}>
-          <div className="bg-[#141414] border border-[#2A2A2A] rounded-2xl p-8 max-w-md w-full mx-4" onClick={e => e.stopPropagation()}>
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-bold text-white mb-2">CPF ou CNPJ</h3>
-              <p className="text-[#888] text-sm">Informe seu CPF ou CNPJ para gerar a cobrança</p>
-            </div>
-            <input
-              type="text"
-              placeholder="000.000.000-00"
-              value={cpfInput}
-              onChange={e => setCpfInput(e.target.value)}
-              className="w-full bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl px-4 py-3 text-sm text-white placeholder-[#555] focus:outline-none focus:border-[#C9A84C] mb-4"
-            />
-            <button
-              onClick={handleCpfSubmit}
-              disabled={!cpfInput.trim() || checking}
-              className="w-full bg-[#C9A84C] text-[#0A0A0A] py-3 rounded-xl font-bold text-sm hover:bg-[#E8C96A] transition-all disabled:opacity-50"
-            >
-              {checking ? 'Processando...' : 'Continuar'}
-            </button>
-          </div>
-        </div>
-      )}
-    </motion.div>
-  );
-}
 
 // Subcomponents
 function Card({ title, children, action, onAction }: { title: string, children: React.ReactNode, action?: string, onAction?: () => void }) {
@@ -3873,12 +3546,16 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
   constructor(props: {children: React.ReactNode}) {
     super(props);
     this.state = { hasError: false, error: null };
+    this.handleReset = this.handleReset.bind(this);
   }
   static getDerivedStateFromError(error: Error) {
     return { hasError: true, error };
   }
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error('ErrorBoundary caught:', error, info);
+  }
+  handleReset() {
+    this.setState({ hasError: false, error: null });
   }
   render() {
     if (this.state.hasError) {
@@ -3888,12 +3565,20 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
             <AlertCircle className="w-16 h-16 text-[#C9A84C] mx-auto mb-4" />
             <h2 className="text-xl font-bold mb-2">Ops! Algo deu errado.</h2>
             <p className="text-[#888] mb-4 text-sm">{this.state.error?.message || 'Erro inesperado'}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-6 py-3 bg-[#C9A84C] text-black rounded-xl font-bold hover:bg-[#d4b85a] transition-colors"
-            >
-              Recarregar Página
-            </button>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={this.handleReset}
+                className="px-6 py-3 bg-[#C9A84C] text-black rounded-xl font-bold hover:bg-[#d4b85a] transition-colors"
+              >
+                Tentar Novamente
+              </button>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-6 py-3 bg-[#1A1A1A] text-white border border-[#2A2A2A] rounded-xl font-bold hover:bg-[#222] transition-colors"
+              >
+                Recarregar Página
+              </button>
+            </div>
           </div>
         </div>
       );
