@@ -1785,7 +1785,7 @@ function LoginScreen() {
       {/* Footer */}
       <footer className="border-t border-[#2A2A2A] py-6 text-center">
         <p className="text-[10px] text-[#555] uppercase tracking-widest font-bold">
-           Enterprise Edition / 2026 • Desenvolvido por Michael Mariano / 2026 • Kernel Barber Shopper é da empresa Nexacore LLC
+           Desenvolvido por Michael Mariano / 2026 • Kernel Barber Shopper é da empresa Nexacore LLC
         </p>
       </footer>
     </div>
