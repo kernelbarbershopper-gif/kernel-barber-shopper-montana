@@ -123,7 +123,7 @@ function MainApp() {
   const [messages, setMessages] = React.useState<Message[]>([
     {
       role: 'ia',
-      text: '?? Bem-vindo ao KERNEL BARBER SHOPPER! Sou a IA oficial da plataforma. Posso te apresentar nossos m�dulos (Agenda, Estoque, Financeiro, Barbeiros), explicar os planos ou te ajudar com dados do sua barbearia. O que voc� quer saber?',
+      text: '?? Bem-vindo ao KERNEL BARBER SHOPPER! Sou a IA oficial da plataforma. Posso te apresentar nossos módulos (Agenda, Estoque, Financeiro, Barbeiros), explicar os planos ou te ajudar com dados da sua barbearia. O que você quer saber?',
       time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
     }
   ]);
@@ -204,7 +204,7 @@ function MainApp() {
           return [{
             id: `app-${app.id}`,
             type: 'appointment',
-            message: `Novo agendamento de ${app.user_name || 'cliente'} �s ${app.date ? new Date(app.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--'}`,
+            message: `Novo agendamento de ${app.user_name || 'cliente'} às ${app.date ? new Date(app.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--'}`,
             time: new Date().toISOString(),
             read: false,
             view: 'agenda',
@@ -255,7 +255,7 @@ function MainApp() {
           role: 'ia',
           text: `?? **Bem-vindo ao KERNEL BARBER SHOPPER!**
 
-Que bom ter voc� como dono da plataforma! Vou te guiar pelos principais m�dulos:
+Que bom ter voc� como dono da plataforma! Vou te guiar pelos principais módulos:
 
 **1?? ?? Dashboard** � M�tricas em tempo real do sua barbearia
 **2?? ?? Agenda** � Gerencie agendamentos de forma inteligente
@@ -265,7 +265,7 @@ Que bom ter voc� como dono da plataforma! Vou te guiar pelos principais m�du
 **6?? ?? IA (eu!)** � Estou aqui para ajudar sempre
 **7?? ?? Planos** � Escolha o melhor para sua barbearia
 
-**Quer saber mais sobre algum m�dulo?** � s� me perguntar! ??`,
+**Quer saber mais sobre algum módulo?** � s� me perguntar! ??`,
           time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
         }]);
       }
@@ -973,7 +973,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                           <p className="text-sm font-bold text-white">{plan.name}</p>
                           <p className="text-xs text-[#888]">{plan.features?.length || 0} recursos</p>
                         </div>
-                        <p className="text-sm font-bold text-[#C9A84C]">{plan.price === 0 ? 'Gr�tis' : formatCurrency(plan.price)}</p>
+                        <p className="text-sm font-bold text-[#C9A84C]">{plan.price === 0 ? 'Grátis' : formatCurrency(plan.price)}</p>
                       </div>
                     ))}
                   </div>
@@ -1457,7 +1457,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                   </div>
                 </div>
                 <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-8">
-                  <h3 className="text-lg font-bold text-white mb-6">Estat�sticas do Sistema</h3>
+                  <h3 className="text-lg font-bold text-white mb-6">Estatàsticas do Sistema</h3>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center p-4 bg-[#141414] rounded-xl">
                       <span className="text-sm text-[#888]">Total de Lojas</span>
@@ -1620,7 +1620,7 @@ function LoginScreen() {
               <CheckCircle2 className="w-4 h-4 text-green-500" /> {t('Loja Online')}
             </div>
             <div className="flex items-center gap-2 text-sm text-[#eee] bg-[#1A1A1A] px-4 py-2 rounded-xl border border-[#2A2A2A]">
-              <CheckCircle2 className="w-4 h-4 text-green-500" /> {t('Kit Profissional Gr�tis')}
+              <CheckCircle2 className="w-4 h-4 text-green-500" /> {t('Kit Profissional Grátis')}
             </div>
           </div>
         </div>
@@ -1647,7 +1647,7 @@ function LoginScreen() {
                 {error && <p className="text-red-500 text-xs">{error}</p>}
                 <button type="submit" disabled={loading}
                   className="w-full bg-gradient-to-r from-[#C9A84C] to-[#E8C96A] text-[#0A0A0A] py-4 rounded-2xl font-bold hover:brightness-110 active:scale-95 transition-all shadow-xl disabled:opacity-50 text-sm">
-                  {loading ? t('Aguarde...') : (isRegistering ? t('Cadastrar Gr�tis') : t('Entrar'))}
+                  {loading ? t('Aguarde...') : (isRegistering ? t('Cadastrar Grátis') : t('Entrar'))}
                 </button>
               </form>
               <button onClick={() => { setIsRegistering(!isRegistering); setError(''); }}
@@ -1656,7 +1656,7 @@ function LoginScreen() {
               </button>
               {isRegistering && (
                 <div className="mt-4 bg-green-500/10 border border-green-500/20 rounded-xl p-3 text-center">
-                  <p className="text-green-500 text-xs font-bold">?? Cadastre-se agora e garanta sua Kit Profissional Gr�tis!</p>
+                  <p className="text-green-500 text-xs font-bold">?? Cadastre-se agora e garanta sua Kit Profissional Grátis!</p>
                 </div>
               )}
             </div>
@@ -1688,9 +1688,9 @@ function LoginScreen() {
         <div className="text-center mb-10">
           <p className="text-[10px] text-[#C9A84C] font-bold uppercase tracking-[3px] mb-2">Planos</p>
           <h2 className="text-3xl font-display font-bold text-white mb-2">
-            Escolha o melhor para seu <span className="text-[#C9A84C]">sal�o</span>
+            Escolha o melhor para seu <span className="text-[#C9A84C]">salão</span>
           </h2>
-            <p className="text-[#888] text-sm">As primeiras 12 pessoas ganham condi��es especiais!</p>
+            <p className="text-[#888] text-sm">As primeiras 12 pessoas ganham condições especiais!</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -1710,40 +1710,40 @@ function LoginScreen() {
               >
                 {isEnterprise && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#C9A84C] to-[#E8C96A] text-[#0A0A0A] text-[9px] font-bold px-4 py-1 rounded-full uppercase tracking-widest shadow-lg whitespace-nowrap">
-                    ?? Kit Profissional Gr�tis
+                    ?? Kit Profissional Grátis
                   </div>
                 )}
                 {isPopular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#C9A84C] text-[#0A0A0A] text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">Mais Popular</div>
                 )}
                 {isFree && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-500 text-[#0A0A0A] text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">Gr�tis</div>
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-500 text-[#0A0A0A] text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">Grátis</div>
                 )}
                 <div className="text-center mb-6">
                   {isEnterprise && <p className="text-[8px] text-[#C9A84C] font-bold uppercase tracking-[3px] mb-1">RECOMENDADO</p>}
                   <h3 className="text-xl font-bold text-white mb-2">{plan.name}</h3>
                   <div className="mb-2">
                     {isFree ? (
-                      <span className="text-4xl font-bold text-green-400">Gr�tis</span>
+                      <span className="text-4xl font-bold text-green-400">Grátis</span>
                     ) : (
                       <>
                         {isEnterprise && (
                           <p className="text-[10px] text-[#555] line-through mb-1">De {formatCurrency(249.90)}</p>
                         )}
                         <span className="text-4xl font-bold text-[#C9A84C]">{formatCurrency(plan.price)}</span>
-                        <span className="text-[#888] text-sm ml-1">/{plan.interval === 'yearly' ? 'ano' : 'm�s'}</span>
+                        <span className="text-[#888] text-sm ml-1">/{plan.interval === 'yearly' ? 'ano' : 'mês'}</span>
                       </>
                     )}
                   </div>
                   {isEnterprise && (
                     <div className="bg-gradient-to-r from-[#C9A84C]/20 to-[#E8C96A]/10 border border-[#C9A84C]/30 rounded-xl p-3 my-3">
-                      <p className="text-[#C9A84C] font-bold text-sm">?? M�quina Personalizada com sua Logo</p>
-                      <p className="text-[10px] text-[#888]">Gr�tis! Sua marca na m�quina</p>
+                      <p className="text-[#C9A84C] font-bold text-sm">?? Máquina Personalizada com sua Logo</p>
+                      <p className="text-[10px] text-[#888]">Grátis! Sua marca na máquina</p>
                     </div>
                   )}
                   {isGold && (
                     <div className="bg-gradient-to-r from-orange-500/20 to-yellow-500/10 border border-orange-500/30 rounded-xl p-3 my-3">
-                      <p className="text-orange-400 font-bold text-sm">?? Primeiros 10 levam Kit Profissional Gr�tis!</p>
+                      <p className="text-orange-400 font-bold text-sm">?? Primeiros 10 levam Kit Profissional Grátis!</p>
                       <p className="text-[10px] text-[#888]">Personaliz�vel com sua marca</p>
                     </div>
                   )}
@@ -1770,7 +1770,7 @@ function LoginScreen() {
                         : "bg-[#1A1A1A] border border-[#2A2A2A] text-white hover:bg-[#222]"
                   )}
                 >
-                  {isFree ? 'Come�ar Gr�tis' : isEnterprise ? 'Garantir Oferta' : 'Assinar'}
+                  {isFree ? 'Come�ar Grátis' : isEnterprise ? 'Garantir Oferta' : 'Assinar'}
                 </button>
               </div>
             );
@@ -1872,7 +1872,7 @@ function WelcomeMachineView({ shopId, onNavigate }: { shopId: string; onNavigate
         <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-6" />
         <h1 className="text-3xl font-bold text-white mb-3">Tudo pronto! ??</h1>
         <p className="text-[#888] text-lg mb-2">Sua solicita��o foi enviada com sucesso.</p>
-        <p className="text-[#888] mb-8">Vamos preparar sua m�quina personalizada. Voc� receber� atualiza��es por aqui!</p>
+        <p className="text-[#888] mb-8">Vamos preparar sua máquina personalizada. Voc� receber� atualiza��es por aqui!</p>
         <button onClick={() => onNavigate('dashboard')}
           className="bg-[#C9A84C] text-[#0A0A0A] px-8 py-3 rounded-xl font-bold hover:bg-[#E8C96A] transition-all">
           Ir para o Dashboard
@@ -1891,7 +1891,7 @@ function WelcomeMachineView({ shopId, onNavigate }: { shopId: string; onNavigate
               <Crown className="w-10 h-10 text-[#0A0A0A]" />
             </div>
             <h1 className="text-3xl font-bold text-white">Parab�ns pelo plano! ??</h1>
-            <p className="text-[#888] text-lg">Voc� ganhou uma <strong className="text-[#C9A84C]">m�quina personalizada</strong> com a logo da sua barbearia!</p>
+            <p className="text-[#888] text-lg">Voc� ganhou uma <strong className="text-[#C9A84C]">máquina personalizada</strong> com a logo da sua barbearia!</p>
             <div className="bg-gradient-to-r from-[#C9A84C]/10 to-transparent border border-[#C9A84C]/20 rounded-2xl p-6 mt-6">
               <p className="text-white text-sm leading-relaxed">
                 Preencha seus dados de envio abaixo e, se tiver uma logo, envie tamb�m. 
@@ -1909,9 +1909,9 @@ function WelcomeMachineView({ shopId, onNavigate }: { shopId: string; onNavigate
         <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-3xl p-8 space-y-6">
           <div className="flex items-center gap-3 mb-2">
             <Package className="w-6 h-6 text-[#C9A84C]" />
-            <h2 className="text-xl font-bold text-white">Dados para Envio da M�quina</h2>
+            <h2 className="text-xl font-bold text-white">Dados para Envio da Máquina</h2>
           </div>
-          <p className="text-[#888] text-sm">Preencha corretamente para receber sua m�quina personalizada.</p>
+          <p className="text-[#888] text-sm">Preencha corretamente para receber sua máquina personalizada.</p>
 
           {error && (
             <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-red-500 text-xs font-bold">{error}</div>
@@ -3407,7 +3407,7 @@ function IAAssistantView({ messages, input, setInput, sendMessage, isTyping, cha
   const quickPrompts = [
     'Quais hor�rios livres hoje?',
     'Relat�rio de estoque cr�tico',
-    'Ranking de barbeiros do m�s',
+    'Ranking de barbeiros do màs',
     'Previs�o de receita semanal',
   ];
 
