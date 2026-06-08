@@ -967,15 +967,18 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                 <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-6">
                   <h3 className="text-sm font-bold text-[#888] uppercase tracking-widest mb-4">{t('Planos Ativos')}</h3>
                   <div className="space-y-3">
-                    {plans.filter((p: any) => p.isActive).map((plan, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 bg-[#141414] rounded-xl">
-                        <div>
-                          <p className="text-sm font-bold text-white">{plan.name}</p>
-                          <p className="text-xs text-[#888]">{plan.features?.length || 0} recursos</p>
-                        </div>
-                        <p className="text-sm font-bold text-[#C9A84C]">{plan.price === 0 ? 'Grátis' : formatCurrency(plan.price)}</p>
-                      </div>
-                    ))}
+{plans.filter((p: any) => p.isActive).map((plan, i) => {
+   const displayPrice = plan.id === 'basic' ? 29.90 : plan.id === 'pro' ? 49.90 : plan.id === 'enterprise' ? 79.90 : plan.price;
+   return (
+     <div key={i} className="flex items-center justify-between p-3 bg-[#141414] rounded-xl">
+       <div>
+         <p className="text-sm font-bold text-white">{plan.name}</p>
+         <p className="text-xs text-[#888]">{plan.features?.length || 0} recursos</p>
+       </div>
+       <p className="text-sm font-bold text-[#C9A84C]">{plan.price === 0 ? 'Grátis' : formatCurrency(displayPrice)}</p>
+     </div>
+   );
+ })}
                   </div>
                 </div>
               </div>
@@ -1696,9 +1699,10 @@ function LoginScreen() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {plans.map((plan, i) => {
             const isFree = plan.price === 0;
-            const isEnterprise = plan.id === 'enterprise' || plan.price >= 129;
+            const isEnterprise = plan.id === 'enterprise';
             const isGold = plan.id === 'pro';
             const isPopular = isGold;
+            const displayPrice = plan.id === 'basic' ? 29.90 : plan.id === 'pro' ? 49.90 : plan.id === 'enterprise' ? 79.90 : plan.price;
             return (
               <div key={plan.id || i}
                 className={cn(
@@ -1730,7 +1734,7 @@ function LoginScreen() {
                         {isEnterprise && (
                           <p className="text-[10px] text-[#555] line-through mb-1">De {formatCurrency(249.90)}</p>
                         )}
-                        <span className="text-4xl font-bold text-[#C9A84C]">{formatCurrency(plan.price)}</span>
+                        <span className="text-4xl font-bold text-[#C9A84C]">{formatCurrency(displayPrice)}</span>
                         <span className="text-[#888] text-sm ml-1">/{plan.interval === 'yearly' ? 'ano' : 'mês'}</span>
                       </>
                     )}
