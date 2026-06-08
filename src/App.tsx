@@ -1697,7 +1697,7 @@ function LoginScreen() {
           {plans.map((plan, i) => {
             const isFree = plan.price === 0;
             const isEnterprise = plan.id === 'enterprise' || plan.price >= 129;
-            const isGold = plan.id === 'pro' || (Number(plan.price) >= 70 && Number(plan.price) < 129);
+            const isGold = plan.id === 'pro';
             const isPopular = isGold;
             return (
               <div key={plan.id || i}
