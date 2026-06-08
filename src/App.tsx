@@ -325,13 +325,13 @@ Que bom ter voc� como dono da plataforma! Vou te guiar pelos principais módul
         if (confirmedToday.length > 0) {
           context += `Detalhes (confirmados):\n`;
           confirmedToday.slice(0, 5).forEach((a: any) => {
-            context += `  � ${a.time || fmtTime(a.date)} - ${a.user_name || 'Cliente'} (${a.service_name || a.service || 'Servi�o'}) - $${Number(a.service_price) || 0} - Tel: ${a.user_phone || 'N/A'}\n`;
+            context += `  � ${a.time || fmtTime(a.date)} - ${a.user_name || 'Cliente'} (${a.service_name || a.service || 'Serviço'}) - $${Number(a.service_price) || 0} - Tel: ${a.user_phone || 'N/A'}\n`;
           });
         }
         if (pendingToday.length > 0) {
           context += `\nPendentes:\n`;
           pendingToday.slice(0, 5).forEach((a: any) => {
-            context += `  � ${a.time || fmtTime(a.date)} - ${a.user_name || 'Cliente'} (${a.service_name || a.service || 'Servi�o'}) - Tel: ${a.user_phone || 'N/A'}\n`;
+            context += `  � ${a.time || fmtTime(a.date)} - ${a.user_name || 'Cliente'} (${a.service_name || a.service || 'Serviço'}) - Tel: ${a.user_phone || 'N/A'}\n`;
           });
         }
 
@@ -751,7 +751,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
   }, [showCreateShop]);
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
   };
 
   const handleToggleShopStatus = async (shop: any) => {
@@ -1517,7 +1517,7 @@ function LoginScreen() {
     return () => { unsub(); clearInterval(interval); };
   }, []);
 
-  const formatCurrency = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+  const formatCurrency = (v: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v);
 
   const fakeNames = [
     'Jo�o Silva', 'Carlos Oliveira', 'Pedro Santos', 'Lucas Costa', 'Ana Souza',
@@ -2322,7 +2322,7 @@ function AgendaView({ onNavigate, shopId, maxAppointments }: { onNavigate: (v: V
       `Ol� ${appointment.user_name}! Seu agendamento na KERNEL BARBER SHOPPER est� confirmado:\n` +
       `Data: ${fmtDate(appointment.date)}\n` +
       `Hor�rio: ${fmtTime(appointment.date)}\n` +
-      `Servi�o: ${appointment.service_name}\n` +
+      `Serviço: ${appointment.service_name}\n` +
       `Profissional: ${barberMap[appointment.professional_id] || appointment.professional_id}\n` +
       `Aguardamos voc�!`
     );
@@ -2381,7 +2381,7 @@ function AgendaView({ onNavigate, shopId, maxAppointments }: { onNavigate: (v: V
         <div className="grid grid-cols-6 p-4 border-b border-[#2A2A2A] text-[10px] uppercase font-bold tracking-widest text-[#C9A84C]">
           <div className="col-span-1">Hor�rio</div>
           <div className="col-span-1">Cliente</div>
-          <div className="col-span-1">Servi�o</div>
+          <div className="col-span-1">Serviço</div>
           <div className="col-span-1">Barbeiro</div>
           <div className="col-span-1">Status</div>
           <div className="col-span-1 text-right">A��o</div>
@@ -3307,7 +3307,7 @@ function FinanceiroView({ shopId }: { shopId: string }) {
   }, [shopId]);
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
   };
 
   return (
@@ -3336,12 +3336,12 @@ function FinanceiroView({ shopId }: { shopId: string }) {
               <p className="text-[10px] mt-1 font-medium text-red-500">Estimado (30%)</p>
             </div>
             <div className="bg-[#1A1A1A] border border-[#2A2A2A] p-6 rounded-2xl">
-              <p className="text-[#888] text-xs font-medium uppercase tracking-wider mb-2">Lucro L�quido</p>
+              <p className="text-[#888] text-xs font-medium uppercase tracking-wider mb-2">Lucro Líquido</p>
               <div className="text-2xl font-bold text-[#E8C96A]">{formatCurrency(profit)}</div>
               <p className="text-[10px] mt-1 font-medium text-green-500">{revenue > 0 ? ((profit / revenue) * 100).toFixed(1) : 0}% margem</p>
             </div>
             <div className="bg-[#1A1A1A] border border-[#2A2A2A] p-6 rounded-2xl">
-              <p className="text-[#888] text-xs font-medium uppercase tracking-wider mb-2">Ticket M�dio</p>
+              <p className="text-[#888] text-xs font-medium uppercase tracking-wider mb-2">Ticket Médio</p>
               <div className="text-2xl font-bold text-[#E8C96A]">{formatCurrency(ticketMedio)}</div>
               <p className="text-[10px] mt-1 font-medium text-[#888]">Por agendamento</p>
             </div>
@@ -3349,7 +3349,7 @@ function FinanceiroView({ shopId }: { shopId: string }) {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-6">
-              <h3 className="text-sm font-bold text-[#888] uppercase tracking-widest mb-4">Receita por Servi�o</h3>
+              <h3 className="text-sm font-bold text-[#888] uppercase tracking-widest mb-4">Receita por Serviço</h3>
               <div className="space-y-4">
                 {revenueByService.length === 0 ? (
                   <p className="text-[#888] text-sm text-center py-4">Nenhum dado ainda</p>
@@ -3391,7 +3391,7 @@ function FinanceiroView({ shopId }: { shopId: string }) {
                   <span className="text-red-400 font-bold">{formatCurrency(expenses)}</span>
                 </div>
                 <div className="border-t border-[#2A2A2A] pt-3 flex justify-between text-sm">
-                  <span className="text-[#eee] font-bold">Lucro L�quido</span>
+                  <span className="text-[#eee] font-bold">Lucro Líquido</span>
                   <span className="text-[#C9A84C] font-bold">{formatCurrency(profit)}</span>
                 </div>
               </div>

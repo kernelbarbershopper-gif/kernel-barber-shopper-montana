@@ -410,7 +410,7 @@ export default function LojaOnlineView() {
         <div>
           <div className="flex items-center gap-2 mb-4">
             <Scissors className="w-5 h-5 text-[#C9A84C]" />
-            <h2 className="text-lg font-bold text-white">Servi�os</h2>
+            <h2 className="text-lg font-bold text-white">Serviços</h2>
           </div>
           <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-6">
             <div className="flex items-center justify-between">
@@ -418,7 +418,7 @@ export default function LojaOnlineView() {
                 <Scissors className="w-5 h-5 text-[#C9A84C]" />
                 <div>
                   <p className="font-bold text-sm text-white">Corte de Cabelo</p>
-                  <p className="text-[10px] text-[#888]">45 min � Servi�o profissional</p>
+                  <p className="text-[10px] text-[#888]">45 min � Serviço profissional</p>
                 </div>
               </div>
               <button onClick={() => { setShowSchedule(true); setForm({ name: '', phone: '', date: '', time: '' }); }}

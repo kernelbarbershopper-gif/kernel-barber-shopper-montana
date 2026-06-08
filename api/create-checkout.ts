@@ -75,7 +75,7 @@ export default async function handler(req: any, res: any) {
         mode: 'payment',
         line_items: [{
           price_data: {
-            currency: 'brl',
+            currency: 'usd',
             product_data: { name: `Plano ${planName || 'Barber Shop'}` },
             unit_amount: amount,
           },
