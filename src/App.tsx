@@ -1612,7 +1612,7 @@ function LoginScreen() {
           <img src="/logo.png" alt="KERNEL BARBER SHOPPER" className="w-16 h-16 rounded-2xl object-cover mx-auto lg:mx-0 mb-6 shadow-2xl shadow-[#C9A84C]/30" />
           <h1 className="text-5xl lg:text-6xl font-display font-bold text-white mb-4 tracking-tight leading-tight">
             KERNEL<br />
-            <span className="text-[#C9A84C]">BEAUTY SHOPPER</span>
+            <span className="text-[#C9A84C]">BARBER SHOPPER</span>
           </h1>
 <p className="text-[#888] text-lg max-w-lg mx-auto lg:mx-0 mb-8">{t('A gest�o de luxo para sua barbearia, agora com intelig�ncia artificial.')}</p>
           <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
