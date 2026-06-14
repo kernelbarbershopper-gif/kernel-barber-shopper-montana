@@ -662,7 +662,12 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
   };
   const { t } = useLocale();
   const [shops, setShops] = React.useState<any[]>([]);
-  const [plans, setPlans] = React.useState<any[]>([]);
+  const [plans, setPlans] = React.useState<any[]>([
+    { id: 'free', name: 'FREE', price: 0, features: ['Online Booking', 'Client Database', 'Service Management', 'Basic Reports', 'Email Support'] },
+    { id: 'basic', name: 'SILVER', price: 29.90, features: ['Everything in Free', 'Financial Control', 'Staff Management', 'Advanced Reports', 'Priority Support', 'Cloud Backup'] },
+    { id: 'pro', name: 'GOLD', price: 49.90, features: ['Everything in Silver', 'Integrated Marketing', 'Message Automation', 'Loyalty Program', 'Smart Dashboard', 'VIP Support', 'Exclusive Training'] },
+    { id: 'enterprise', name: 'ENTERPRISE PRO', price: 79.90, features: ['Everything in Gold', 'Custom App', 'ERP Integration', 'Multi-location', 'Strategic Consulting', '24/7 Support', 'Exclusive Updates'] }
+  ]);
   const [users, setUsers] = React.useState<any[]>([]);
   const [allUsers, setAllUsers] = React.useState<any[]>([]);
   const [stats, setStats] = React.useState({
@@ -968,7 +973,7 @@ function AdminLayout({ user, logout, activeTab, setActiveTab }: any) {
                   <h3 className="text-sm font-bold text-[#888] uppercase tracking-widest mb-4">{t('Planos Ativos')}</h3>
                   <div className="space-y-3">
 {plans.filter((p: any) => p.isActive).map((plan, i) => {
-   const displayPrice = plan.id === 'basic' ? 29.90 : plan.id === 'pro' ? 49.90 : plan.id === 'enterprise' ? 79.90 : plan.price;
+   const displayPrice = plan.price;
    return (
      <div key={i} className="flex items-center justify-between p-3 bg-[#141414] rounded-xl">
        <div>
@@ -1507,7 +1512,12 @@ function LoginScreen() {
   const [loading, setLoading] = React.useState(false);
   const [timer, setTimer] = React.useState(3600);
   const [notifications, setNotifications] = React.useState<any[]>([]);
-  const [plans, setPlans] = React.useState<any[]>([]);
+  const [plans, setPlans] = React.useState<any[]>([
+    { id: 'free', name: 'FREE', price: 0, features: ['Online Booking', 'Client Database', 'Service Management', 'Basic Reports', 'Email Support'] },
+    { id: 'basic', name: 'SILVER', price: 29.90, features: ['Everything in Free', 'Financial Control', 'Staff Management', 'Advanced Reports', 'Priority Support', 'Cloud Backup'] },
+    { id: 'pro', name: 'GOLD', price: 49.90, features: ['Everything in Silver', 'Integrated Marketing', 'Message Automation', 'Loyalty Program', 'Smart Dashboard', 'VIP Support', 'Exclusive Training'] },
+    { id: 'enterprise', name: 'ENTERPRISE PRO', price: 79.90, features: ['Everything in Gold', 'Custom App', 'ERP Integration', 'Multi-location', 'Strategic Consulting', '24/7 Support', 'Exclusive Updates'] }
+  ]);
   const formRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -1702,7 +1712,7 @@ function LoginScreen() {
             const isEnterprise = plan.id === 'enterprise';
             const isGold = plan.id === 'pro';
             const isPopular = isGold;
-            const displayPrice = plan.id === 'basic' ? 29.90 : plan.id === 'pro' ? 49.90 : plan.id === 'enterprise' ? 79.90 : plan.price;
+            const displayPrice = plan.price;
             return (
               <div key={plan.id || i}
                 className={cn(

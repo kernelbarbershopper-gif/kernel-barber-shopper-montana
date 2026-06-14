@@ -47,7 +47,12 @@ function copyToClipboard(text: string) {
 export default function PricingView() {
   const { t } = useLocale();
   const { user } = useAuth();
-  const [plans, setPlans] = React.useState<any[]>([]);
+  const [plans, setPlans] = React.useState<any[]>([
+    { id: 'free', name: 'FREE', price: 0, features: ['Online Booking', 'Client Database', 'Service Management', 'Basic Reports', 'Email Support'] },
+    { id: 'basic', name: 'SILVER', price: 29.90, features: ['Everything in Free', 'Financial Control', 'Staff Management', 'Advanced Reports', 'Priority Support', 'Cloud Backup'] },
+    { id: 'pro', name: 'GOLD', price: 49.90, features: ['Everything in Silver', 'Integrated Marketing', 'Message Automation', 'Loyalty Program', 'Smart Dashboard', 'VIP Support', 'Exclusive Training'] },
+    { id: 'enterprise', name: 'ENTERPRISE PRO', price: 79.90, features: ['Everything in Gold', 'Custom App', 'ERP Integration', 'Multi-location', 'Strategic Consulting', '24/7 Support', 'Exclusive Updates'] }
+  ]);
   const [loading, setLoading] = React.useState(true);
   const [pixModal, setPixModal] = React.useState<{
     open: boolean; brCode?: string; brCodeBase64?: string; expiresAt?: string;
